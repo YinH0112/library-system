@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library_system.mapper.ReaderMapper">
+
+    <resultMap id="readerResultMap" type="org.example.library_system.entity.Reader">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="studentId" column="student_id"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="status" column="status"/>
+        <result property="registerDate" column="register_date"/>
+        <result property="createTime" column="create_time"/>
+        <result property="activeBorrowCount" column="active_borrow_count"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="readerResultMap">
+        SELECT r.id, r.name, r.student_id, r.phone, r.email, r.status, r.register_date, r.create_time,
+               (SELECT COUNT(*) FROM borrow b WHERE b.reader_id = r.id AND b.status IN ('BORROWED','OVERDUE')) AS active_borrow_count
+        FROM reader r
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (r.name LIKE CONCAT('%', #{keyword}, '%')
+                  OR r.student_id LIKE CONCAT('%', #{keyword}, '%')
+                  OR r.phone LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY r.id DESC
+    </select>
+
+    <select id="findById" resultMap="readerResultMap">
+        SELECT r.id, r.name, r.student_id, r.phone, r.email, r.status, r.register_date, r.create_time,
+               (SELECT COUNT(*) FROM borrow b WHERE b.reader_id = r.id AND b.status IN ('BORROWED','OVERDUE')) AS active_borrow_count
+        FROM reader r WHERE r.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.example.library_system.entity.Reader" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO reader (name, student_id, phone, email, status, register_date)
+        VALUES (#{name}, #{studentId}, #{phone}, #{email}, #{status}, #{registerDate})
+    </insert>
+
+    <update id="update" parameterType="org.example.library_system.entity.Reader">
+        UPDATE reader
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="studentId != null">student_id = #{studentId},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM reader WHERE id = #{id}
+    </delete>
+</mapper>

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliotheca · 图书管理系统</title>
+    <!-- Google Fonts: Cormorant Garamond + Noto Serif SC -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Element Plus CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css">
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- Element Plus -->
+    <script src="https://unpkg.com/element-plus"></script>
+    <!-- Element Plus Icons -->
+    <script src="https://unpkg.com/@element-plus/icons-vue"></script>
+    <!-- axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app">
+        <!-- 纸张纹理叠加层 -->
+        <div class="paper-grain"></div>
+
+        <!-- ============ 报头 Masthead ============ -->
+        <header class="masthead">
+            <div class="masthead-inner">
+                <div class="masthead-top">
+                    <span class="masthead-date">EST. MMXXVI</span>
+                    <span class="masthead-edition">VOL. I · NO. {{ String(books.length).padStart(3, '0') }}</span>
+                </div>
+                <h1 class="masthead-title">
+                    <span class="title-main">Bibliotheca</span>
+                    <span class="title-cn">图 书 馆</span>
+                </h1>
+                <div class="masthead-sub">
+                    <span class="sub-line"></span>
+                    <span class="sub-text">A Repository of Volumes · 典 籍 总 目</span>
+                    <span class="sub-line"></span>
+                </div>
+                <div class="masthead-stats">
+                    <div class="stat-item">
+                        <span class="stat-num">{{ books.length }}</span>
+                        <span class="stat-label">藏 书 / Volumes</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-num">{{ totalAuthors }}</span>
+                        <span class="stat-label">著 者 / Authors</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-num">¥{{ totalValue }}</span>
+                        <span class="stat-label">总 值 / Total Value</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============ 工具栏 ============ -->
+        <section class="toolbar-section">
+            <div class="toolbar">
+                <!-- 搜索：下划线式 -->
+                <div class="search-wrap">
+                    <input
+                        v-model="searchKeyword"
+                        class="search-input"
+                        type="text"
+                        placeholder="检索书名…  Search by title"
+                        @keyup.enter="handleSearch" />
+                    <button class="search-btn" @click="handleSearch" aria-label="搜索">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <circle cx="11" cy="11" r="7"/>
+                            <path d="m21 21-4.3-4.3"/>
+                        </svg>
+                    </button>
+                    <button v-if="searchKeyword" class="search-clear" @click="clearSearch" aria-label="清除">×</button>
+                </div>
+
+                <div class="toolbar-right">
+                    <!-- 视图切换 -->
+                    <div class="view-toggle">
+                        <button :class="['toggle-btn', { active: viewMode === 'grid' }]" @click="viewMode = 'grid'" aria-label="卡片视图">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                            </svg>
+                        </button>
+                        <button :class="['toggle-btn', { active: viewMode === 'table' }]" @click="viewMode = 'table'" aria-label="列表视图">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <line x1="3" y1="6" x2="21" y2="6"/>
+                                <line x1="3" y1="12" x2="21" y2="12"/>
+                                <line x1="3" y1="18" x2="21" y2="18"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- 新增按钮 -->
+                    <button class="add-btn" @click="openAddDialog">
+                        <span class="add-plus">+</span>
+                        <span>新入库</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 搜索结果提示 -->
+            <transition name="fade">
+                <div v-if="searchKeyword" class="search-hint">
+                    检索 “<em>{{ searchKeyword }}</em>” — 共 {{ books.length }} 卷
+                </div>
+            </transition>
+        </section>
+
+        <!-- ============ 主内容 ============ -->
+        <main class="main-content">
+            <!-- 加载骨架 -->
+            <div v-if="loading" class="loading-wrap">
+                <div class="quill-spinner">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                        <path d="M3 21l3-3 11-11 3 3-11 11-3 3z"/>
+                        <path d="M14 7l3 3"/>
+                    </svg>
+                </div>
+                <p class="loading-text">正 在 翻 阅 卷 宗…</p>
+            </div>
+
+            <!-- 空状态 -->
+            <div v-else-if="books.length === 0" class="empty-state">
+                <div class="empty-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="0.8">
+                        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                    </svg>
+                </div>
+                <p class="empty-title">书 架 空 空</p>
+                <p class="empty-sub">No volumes found</p>
+            </div>
+
+            <!-- ============ 卡片网格视图 ============ -->
+            <transition-group v-else-if="viewMode === 'grid'" name="card" tag="div" class="book-grid">
+                <article
+                    v-for="(book, index) in books"
+                    :key="book.id"
+                    class="book-card"
+                    :style="{ animationDelay: (index * 0.06) + 's' }">
+
+                    <!-- 书脊装饰 -->
+                    <div class="card-spine">
+                        <span class="spine-num">{{ String(book.id).padStart(3, '0') }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <header class="card-header">
+                            <span class="card-meta">No. {{ String(book.id).padStart(3, '0') }}</span>
+                            <span class="card-meta">{{ book.author || '佚 名' }}</span>
+                        </header>
+
+                        <h3 class="card-title" :title="book.name">{{ book.name }}</h3>
+
+                        <div class="card-divider">
+                            <span class="divider-ornament">❦</span>
+                        </div>
+
+                        <dl class="card-details">
+                            <div class="detail-row">
+                                <dt>出 版</dt>
+                                <dd>{{ book.publisher || '—' }}</dd>
+                            </div>
+                            <div class="detail-row">
+                                <dt>定 价</dt>
+                                <dd class="price">¥{{ book.price != null ? Number(book.price).toFixed(2) : '—' }}</dd>
+                            </div>
+                        </dl>
+
+                        <footer class="card-actions">
+                            <button class="action-btn edit" @click="openEditDialog(book)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                <span>批 注</span>
+                            </button>
+                            <button class="action-btn delete" @click="handleDelete(book)">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/>
+                                    <path d="M10 11v6M14 11v6"/>
+                                </svg>
+                                <span>移 除</span>
+                            </button>
+                        </footer>
+                    </div>
+                </article>
+            </transition-group>
+
+            <!-- ============ 表格视图 ============ -->
+            <div v-else class="table-wrap">
+                <table class="book-table">
+                    <thead>
+                        <tr>
+                            <th class="col-num">No.</th>
+                            <th class="col-title">书 名 / Title</th>
+                            <th class="col-author">著 者 / Author</th>
+                            <th class="col-pub">出 版 社 / Publisher</th>
+                            <th class="col-price">定 价 / Price</th>
+                            <th class="col-actions">操 作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(book, index) in books" :key="book.id" :style="{ animationDelay: (index * 0.04) + 's' }" class="table-row">
+                            <td class="col-num">{{ String(book.id).padStart(3, '0') }}</td>
+                            <td class="col-title"><span class="table-title-text">{{ book.name }}</span></td>
+                            <td class="col-author">{{ book.author || '佚名' }}</td>
+                            <td class="col-pub">{{ book.publisher || '—' }}</td>
+                            <td class="col-price">¥{{ book.price != null ? Number(book.price).toFixed(2) : '—' }}</td>
+                            <td class="col-actions">
+                                <button class="action-btn edit small" @click="openEditDialog(book)">批注</button>
+                                <button class="action-btn delete small" @click="handleDelete(book)">移除</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+
+        <!-- ============ 页脚 ============ -->
+        <footer class="page-footer">
+            <div class="footer-ornament">❦ · ❦ · ❦</div>
+            <p class="footer-text">Bibliotheca · 图书管理系统 · Anno MMXXVI</p>
+        </footer>
+
+        <!-- ============ 新增/编辑 对话框 ============ -->
+        <transition name="dialog">
+            <div v-if="dialogVisible" class="dialog-overlay" @click.self="dialogVisible = false">
+                <div class="dialog-card">
+                    <div class="dialog-corner top-left"></div>
+                    <div class="dialog-corner top-right"></div>
+                    <div class="dialog-corner bottom-left"></div>
+                    <div class="dialog-corner bottom-right"></div>
+
+                    <header class="dialog-header">
+                        <span class="dialog-eyebrow">{{ form.id == null ? 'New Entry' : 'Revise Entry' }}</span>
+                        <h2 class="dialog-title">{{ dialogTitle }}</h2>
+                        <div class="dialog-divider"><span>❦</span></div>
+                    </header>
+
+                    <form class="dialog-form" @submit.prevent="handleSubmit">
+                        <div class="form-row">
+                            <label class="form-label">
+                                <span class="label-text">书 名 <em>Title</em></span>
+                                <input
+                                    v-model="form.name"
+                                    class="form-input"
+                                    placeholder="请输入书名"
+                                    ref="nameInput" />
+                            </label>
+                        </div>
+
+                        <div class="form-row">
+                            <label class="form-label">
+                                <span class="label-text">著 者 <em>Author</em></span>
+                                <input v-model="form.author" class="form-input" placeholder="请输入作者" />
+                            </label>
+                        </div>
+
+                        <div class="form-row two-col">
+                            <label class="form-label">
+                                <span class="label-text">定 价 <em>Price</em></span>
+                                <input v-model.number="form.price" type="number" step="0.01" min="0" class="form-input" placeholder="0.00" />
+                            </label>
+                            <label class="form-label">
+                                <span class="label-text">出 版 社 <em>Publisher</em></span>
+                                <input v-model="form.publisher" class="form-input" placeholder="请输入出版社" />
+                            </label>
+                        </div>
+
+                        <footer class="dialog-footer">
+                            <button type="button" class="dialog-btn cancel" @click="dialogVisible = false">取 消</button>
+                            <button type="submit" class="dialog-btn confirm" :disabled="submitting">
+                                {{ submitting ? '处 理 中…' : '确 认' }}
+                            </button>
+                        </footer>
+                    </form>
+                </div>
+            </div>
+        </transition>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library_system.mapper.BorrowMapper">
+
+    <resultMap id="borrowResultMap" type="org.example.library_system.entity.Borrow">
+        <id property="id" column="id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="readerId" column="reader_id"/>
+        <result property="borrowDate" column="borrow_date"/>
+        <result property="dueDate" column="due_date"/>
+        <result property="returnDate" column="return_date"/>
+        <result property="status" column="status"/>
+        <result property="fine" column="fine"/>
+        <result property="remark" column="remark"/>
+        <result property="bookName" column="book_name"/>
+        <result property="readerName" column="reader_name"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="borrowResultMap">
+        SELECT br.id, br.book_id, br.reader_id, br.borrow_date, br.due_date,
+               br.return_date, br.status, br.fine, br.remark,
+               b.name AS book_name, r.name AS reader_name
+        FROM borrow br
+        LEFT JOIN book b ON br.book_id = b.id
+        LEFT JOIN reader r ON br.reader_id = r.id
+        <where>
+            <if test="status != null and status != ''">
+                AND br.status = #{status}
+            </if>
+            <if test="readerId != null">
+                AND br.reader_id = #{readerId}
+            </if>
+        </where>
+        ORDER BY br.id DESC
+    </select>
+
+    <select id="findById" resultMap="borrowResultMap">
+        SELECT br.id, br.book_id, br.reader_id, br.borrow_date, br.due_date,
+               br.return_date, br.status, br.fine, br.remark,
+               b.name AS book_name, r.name AS reader_name
+        FROM borrow br
+        LEFT JOIN book b ON br.book_id = b.id
+        LEFT JOIN reader r ON br.reader_id = r.id
+        WHERE br.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.example.library_system.entity.Borrow" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO borrow (book_id, reader_id, borrow_date, due_date, return_date, status, fine, remark)
+        VALUES (#{bookId}, #{readerId}, #{borrowDate}, #{dueDate}, #{returnDate}, #{status}, #{fine}, #{remark})
+    </insert>
+
+    <update id="updateReturn">
+        UPDATE borrow
+        SET return_date = #{returnDate}, status = #{status}, fine = #{fine}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE borrow SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <select id="countActiveByReader" resultType="int">
+        SELECT COUNT(*) FROM borrow WHERE reader_id = #{readerId} AND status IN ('BORROWED','OVERDUE')
+    </select>
+
+    <select id="countOverdue" resultType="int">
+        SELECT COUNT(*) FROM borrow WHERE status = 'OVERDUE'
+    </select>
+</mapper>

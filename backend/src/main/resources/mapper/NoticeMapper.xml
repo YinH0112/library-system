@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library_system.mapper.NoticeMapper">
+
+    <resultMap id="noticeResultMap" type="org.example.library_system.entity.Notice">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="type" column="type"/>
+        <result property="status" column="status"/>
+        <result property="publisherId" column="publisher_id"/>
+        <result property="publishDate" column="publish_date"/>
+        <result property="pinned" column="pinned"/>
+        <result property="publisherName" column="publisher_name"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="noticeResultMap">
+        SELECT n.id, n.title, n.content, n.type, n.status, n.publisher_id, n.publish_date, n.pinned,
+               u.username AS publisher_name
+        FROM notice n
+        LEFT JOIN `user` u ON n.publisher_id = u.id
+        <where>
+            <if test="publishedOnly">
+                AND n.status = 'PUBLISHED'
+            </if>
+            <if test="type != null and type != ''">
+                AND n.type = #{type}
+            </if>
+        </where>
+        ORDER BY n.pinned DESC, n.publish_date DESC
+    </select>
+
+    <select id="findById" resultMap="noticeResultMap">
+        SELECT n.id, n.title, n.content, n.type, n.status, n.publisher_id, n.publish_date, n.pinned,
+               u.username AS publisher_name
+        FROM notice n
+        LEFT JOIN `user` u ON n.publisher_id = u.id
+        WHERE n.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.example.library_system.entity.Notice" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notice (title, content, type, status, publisher_id, publish_date, pinned)
+        VALUES (#{title}, #{content}, #{type}, #{status}, #{publisherId}, #{publishDate}, #{pinned})
+    </insert>
+
+    <update id="update" parameterType="org.example.library_system.entity.Notice">
+        UPDATE notice
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="pinned != null">pinned = #{pinned},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="togglePinned">
+        UPDATE notice SET pinned = #{pinned} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM notice WHERE id = #{id}
+    </delete>
+</mapper>

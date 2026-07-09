@@ -1,0 +1,49 @@
+# 依赖
+node_modules/
+frontend-react/node_modules/
+frontend-react/dist/
+
+# 构建产物
+backend/target/
+*.class
+*.jar
+!backend/*.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志
+*.log
+logs/
+
+# 环境变量(含敏感信息,不入库)
+.env
+.env.local
+.env.*.local
+# 但保留 .env.production 模板(不含真实密钥)
+!frontend-react/.env.production
+
+# 数据库
+*.db
+*.sqlite
+
+# Trae 内部文件
+.trae/
+
+# 临时文件
+*.tmp
+*.bak
+*.swp
+*~

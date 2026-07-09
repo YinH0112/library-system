@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library_system.mapper.BookMapper">
+
+    <resultMap id="bookResultMap" type="org.example.library_system.entity.Book">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="author" column="author"/>
+        <result property="price" column="price"/>
+        <result property="publisher" column="publisher"/>
+        <result property="isbn" column="isbn"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="totalStock" column="total_stock"/>
+        <result property="stock" column="stock"/>
+        <result property="publishDate" column="publish_date"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+        <result property="categoryName" column="category_name"/>
+    </resultMap>
+
+    <!-- 旧接口:仅按 name 模糊查询,保留向后兼容 -->
+    <select id="findAll" resultMap="bookResultMap">
+        SELECT id, name, author, price, publisher, isbn, category_id, total_stock, stock,
+               publish_date, description, create_time
+        FROM book
+        <where>
+            <if test="name != null and name != ''">
+                AND name LIKE CONCAT('%', #{name}, '%')
+            </if>
+        </where>
+        ORDER BY id DESC
+    </select>
+
+    <!-- 多条件分页查询,联表带出分类名 -->
+    <select id="findByQuery" resultMap="bookResultMap" parameterType="org.example.library_system.dto.BookQuery">
+        SELECT b.id, b.name, b.author, b.price, b.publisher, b.isbn, b.category_id,
+               b.total_stock, b.stock, b.publish_date, b.description, b.create_time,
+               c.name AS category_name
+        FROM book b
+        LEFT JOIN category c ON b.category_id = c.id
+        <where>
+            <if test="name != null and name != ''">
+                AND b.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="author != null and author != ''">
+                AND b.author LIKE CONCAT('%', #{author}, '%')
+            </if>
+            <if test="publisher != null and publisher != ''">
+                AND b.publisher LIKE CONCAT('%', #{publisher}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND b.category_id = #{categoryId}
+            </if>
+        </where>
+        ORDER BY b.id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countByQuery" resultType="long" parameterType="org.example.library_system.dto.BookQuery">
+        SELECT COUNT(*) FROM book b
+        <where>
+            <if test="name != null and name != ''">
+                AND b.name LIKE CONCAT('%', #{name}, '%')
+            </if>
+            <if test="author != null and author != ''">
+                AND b.author LIKE CONCAT('%', #{author}, '%')
+            </if>
+            <if test="publisher != null and publisher != ''">
+                AND b.publisher LIKE CONCAT('%', #{publisher}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND b.category_id = #{categoryId}
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" resultMap="bookResultMap">
+        SELECT b.id, b.name, b.author, b.price, b.publisher, b.isbn, b.category_id,
+               b.total_stock, b.stock, b.publish_date, b.description, b.create_time,
+               c.name AS category_name
+        FROM book b
+        LEFT JOIN category c ON b.category_id = c.id
+        WHERE b.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.example.library_system.entity.Book" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO book (name, author, price, publisher, isbn, category_id, total_stock, stock, publish_date, description)
+        VALUES (#{name}, #{author}, #{price}, #{publisher}, #{isbn}, #{categoryId},
+                #{totalStock}, #{stock}, #{publishDate}, #{description})
+    </insert>
+
+    <update id="update" parameterType="org.example.library_system.entity.Book">
+        UPDATE book
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="author != null">author = #{author},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="publisher != null">publisher = #{publisher},</if>
+            <if test="isbn != null">isbn = #{isbn},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="totalStock != null">total_stock = #{totalStock},</if>
+            <if test="publishDate != null">publish_date = #{publishDate},</if>
+            <if test="description != null">description = #{description},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM book WHERE id = #{id}
+    </delete>
+
+    <!-- 扣减库存:仅当 stock > 0 时才生效(避免超借) -->
+    <update id="decreaseStock">
+        UPDATE book SET stock = stock - 1 WHERE id = #{id} AND stock > 0
+    </update>
+
+    <!-- 恢复库存:不能超过 total_stock -->
+    <update id="increaseStock">
+        UPDATE book SET stock = stock + 1 WHERE id = #{id} AND stock &lt; total_stock
+    </update>
+</mapper>

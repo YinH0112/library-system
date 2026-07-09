@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library_system.mapper.CategoryMapper">
+
+    <resultMap id="categoryResultMap" type="org.example.library_system.entity.Category">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+        <result property="bookCount" column="book_count"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="categoryResultMap">
+        SELECT c.id, c.name, c.description, c.create_time,
+               (SELECT COUNT(*) FROM book b WHERE b.category_id = c.id) AS book_count
+        FROM category c
+        ORDER BY c.id ASC
+    </select>
+
+    <select id="findById" resultMap="categoryResultMap">
+        SELECT id, name, description, create_time
+        FROM category
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.example.library_system.entity.Category" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO category (name, description)
+        VALUES (#{name}, #{description})
+    </insert>
+
+    <update id="update" parameterType="org.example.library_system.entity.Category">
+        UPDATE category
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="description != null">description = #{description},</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM category WHERE id = #{id}
+    </delete>
+
+    <select id="countBooksByCategory" resultType="int">
+        SELECT COUNT(*) FROM book WHERE category_id = #{id}
+    </select>
+</mapper>

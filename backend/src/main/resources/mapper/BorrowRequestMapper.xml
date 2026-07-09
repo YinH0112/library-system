@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library_system.mapper.BorrowRequestMapper">
+
+    <resultMap id="requestResultMap" type="org.example.library_system.entity.BorrowRequest">
+        <id property="id" column="id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="readerId" column="reader_id"/>
+        <result property="requestDate" column="request_date"/>
+        <result property="dueDays" column="due_days"/>
+        <result property="status" column="status"/>
+        <result property="approveDate" column="approve_date"/>
+        <result property="adminId" column="admin_id"/>
+        <result property="adminRemark" column="admin_remark"/>
+        <result property="readerRemark" column="reader_remark"/>
+        <result property="borrowId" column="borrow_id"/>
+        <result property="bookName" column="book_name"/>
+        <result property="readerName" column="reader_name"/>
+        <result property="adminName" column="admin_name"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="requestResultMap">
+        SELECT rq.id, rq.book_id, rq.reader_id, rq.request_date, rq.due_days,
+               rq.status, rq.approve_date, rq.admin_id, rq.admin_remark, rq.reader_remark, rq.borrow_id,
+               b.name AS book_name, r.name AS reader_name, au.username AS admin_name
+        FROM borrow_request rq
+        LEFT JOIN book b ON rq.book_id = b.id
+        LEFT JOIN reader r ON rq.reader_id = r.id
+        LEFT JOIN `user` au ON rq.admin_id = au.id
+        <where>
+            <if test="status != null and status != ''">
+                AND rq.status = #{status}
+            </if>
+            <if test="readerId != null">
+                AND rq.reader_id = #{readerId}
+            </if>
+        </where>
+        ORDER BY rq.id DESC
+    </select>
+
+    <select id="findById" resultMap="requestResultMap">
+        SELECT rq.id, rq.book_id, rq.reader_id, rq.request_date, rq.due_days,
+               rq.status, rq.approve_date, rq.admin_id, rq.admin_remark, rq.reader_remark, rq.borrow_id,
+               b.name AS book_name, r.name AS reader_name, au.username AS admin_name
+        FROM borrow_request rq
+        LEFT JOIN book b ON rq.book_id = b.id
+        LEFT JOIN reader r ON rq.reader_id = r.id
+        LEFT JOIN `user` au ON rq.admin_id = au.id
+        WHERE rq.id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="org.example.library_system.entity.BorrowRequest" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO borrow_request (book_id, reader_id, request_date, due_days, status, reader_remark)
+        VALUES (#{bookId}, #{readerId}, #{requestDate}, #{dueDays}, #{status}, #{readerRemark})
+    </insert>
+
+    <update id="updateApprove">
+        UPDATE borrow_request
+        SET status = #{status}, approve_date = #{approveDate}, admin_id = #{adminId},
+            admin_remark = #{adminRemark}, borrow_id = #{borrowId}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE borrow_request SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <select id="countPendingByReader" resultType="int">
+        SELECT COUNT(*) FROM borrow_request WHERE reader_id = #{readerId} AND status = 'PENDING'
+    </select>
+
+    <select id="countPending" resultType="int">
+        SELECT COUNT(*) FROM borrow_request WHERE status = 'PENDING'
+    </select>
+</mapper>

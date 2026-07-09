@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.library_system.mapper.ReviewMapper">
+
+    <resultMap id="reviewResultMap" type="org.example.library_system.entity.Review">
+        <id property="id" column="id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="readerId" column="reader_id"/>
+        <result property="rating" column="rating"/>
+        <result property="content" column="content"/>
+        <result property="createTime" column="create_time"/>
+        <result property="bookName" column="book_name"/>
+        <result property="readerName" column="reader_name"/>
+    </resultMap>
+
+    <select id="findByBookId" resultMap="reviewResultMap">
+        SELECT rv.id, rv.book_id, rv.reader_id, rv.rating, rv.content, rv.create_time,
+               b.name AS book_name, r.name AS reader_name
+        FROM review rv
+        LEFT JOIN book b ON rv.book_id = b.id
+        LEFT JOIN reader r ON rv.reader_id = r.id
+        WHERE rv.book_id = #{bookId}
+        ORDER BY rv.create_time DESC
+    </select>
+
+    <select id="findByReaderId" resultMap="reviewResultMap">
+        SELECT rv.id, rv.book_id, rv.reader_id, rv.rating, rv.content, rv.create_time,
+               b.name AS book_name, r.name AS reader_name
+        FROM review rv
+        LEFT JOIN book b ON rv.book_id = b.id
+        LEFT JOIN reader r ON rv.reader_id = r.id
+        WHERE rv.reader_id = #{readerId}
+        ORDER BY rv.create_time DESC
+    </select>
+
+    <select id="findById" resultMap="reviewResultMap">
+        SELECT rv.id, rv.book_id, rv.reader_id, rv.rating, rv.content, rv.create_time,
+               b.name AS book_name, r.name AS reader_name
+        FROM review rv
+        LEFT JOIN book b ON rv.book_id = b.id
+        LEFT JOIN reader r ON rv.reader_id = r.id
+        WHERE rv.id = #{id}
+    </select>
+
+    <select id="findByBookAndReader" resultMap="reviewResultMap">
+        SELECT rv.id, rv.book_id, rv.reader_id, rv.rating, rv.content, rv.create_time,
+               b.name AS book_name, r.name AS reader_name
+        FROM review rv
+        LEFT JOIN book b ON rv.book_id = b.id
+        LEFT JOIN reader r ON rv.reader_id = r.id
+        WHERE rv.book_id = #{bookId} AND rv.reader_id = #{readerId}
+    </select>
+
+    <insert id="insert" parameterType="org.example.library_system.entity.Review" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO review (book_id, reader_id, rating, content)
+        VALUES (#{bookId}, #{readerId}, #{rating}, #{content})
+    </insert>
+
+    <update id="update" parameterType="org.example.library_system.entity.Review">
+        UPDATE review
+        SET rating = #{rating}, content = #{content}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM review WHERE id = #{id}
+    </delete>
+
+    <select id="avgRatingByBook" resultType="java.lang.Double">
+        SELECT AVG(rating) FROM review WHERE book_id = #{bookId}
+    </select>
+
+    <select id="ratingDistributionByBook" resultType="java.util.Map">
+        SELECT rating, COUNT(*) AS count
+        FROM review
+        WHERE book_id = #{bookId}
+        GROUP BY rating
+        ORDER BY rating DESC
+    </select>
+</mapper>
