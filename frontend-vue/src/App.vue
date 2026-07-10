@@ -165,12 +165,12 @@ onUnmounted(() => {
         </div>
       </footer>
 
-      <!-- 全局 Toast -->
-      <Toast ref="toastRef" />
-      <!-- 全局确认对话框 -->
-      <ConfirmDialog ref="confirmRef" />
     </div>
   </template>
+
+  <!-- 全局 Toast 与确认对话框(无论登录与否都需可用,登录页输错密码也要提示) -->
+  <Toast ref="toastRef" />
+  <ConfirmDialog ref="confirmRef" />
 </template>
 
 <style scoped>

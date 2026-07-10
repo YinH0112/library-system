@@ -57,6 +57,7 @@ export interface Book {
   id: number
   name: string
   author?: string
+  price?: number | string
   publisher?: string
   isbn?: string
   categoryId?: number
@@ -65,6 +66,7 @@ export interface Book {
   totalStock?: number
   description?: string
   location?: string
+  publishDate?: string
   publishYear?: number
   createTime?: string
 }
