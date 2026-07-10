@@ -800,6 +800,7 @@ select.lib-input { cursor: pointer; }
   justify-content: space-between;
   padding: 20px 24px;
   border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
 }
 .dialog-title {
   font-family: var(--font-display);
@@ -831,6 +832,8 @@ select.lib-input { cursor: pointer; }
   flex-direction: column;
   gap: 16px;
   overflow-y: auto;
+  min-height: 0;       /* flex column 子元素需此属性才能让 overflow-y 生效,避免长内容撑破对话框 */
+  flex: 1;
 }
 
 .dialog-foot {
@@ -839,6 +842,7 @@ select.lib-input { cursor: pointer; }
   gap: 10px;
   padding: 16px 24px;
   border-top: 1px solid var(--line);
+  flex-shrink: 0;
 }
 
 /* 确认框 */
@@ -930,6 +934,7 @@ select.lib-input { cursor: pointer; }
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 18px;
 }
+/* 公告板卡片(兼容原有 browse-card 用法,保持 column 布局) */
 .browse-card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -945,6 +950,230 @@ select.lib-input { cursor: pointer; }
   transform: translateY(-3px);
   box-shadow: var(--shadow-md);
   border-color: var(--line-strong);
+}
+
+/* ============================================================
+   图书浏览卡片(独立样式,避免与 browse-card 冲突)
+   ============================================================ */
+.book-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 0;
+  box-shadow: var(--shadow-xs);
+  transition: all 0.3s var(--ease);
+  display: flex;
+  flex-direction: row;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+.book-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--line-strong);
+}
+.book-card:focus-visible {
+  outline: 2px solid var(--terracotta);
+  outline-offset: 2px;
+}
+
+/* 左侧分类色带 */
+.bc-spine {
+  width: 6px;
+  flex-shrink: 0;
+  background: var(--forest);
+  transition: width 0.3s var(--ease);
+}
+.book-card:hover .bc-spine { width: 9px; }
+.bc-spine[data-cat="1"] { background: #1a3a2e; }   /* 计算机科学 - 森林绿 */
+.bc-spine[data-cat="2"] { background: #b85a3e; }   /* 文学 - 赤陶棕 */
+.bc-spine[data-cat="3"] { background: #8c6d3f; }   /* 历史 - 古铜金 */
+.bc-spine[data-cat="4"] { background: #4a5d4f; }   /* 哲学 - 苔藓绿 */
+.bc-cat-label {
+  display: none; /* 色带上不显示文字,保持简洁 */
+}
+
+/* 右侧主体 */
+.bc-body {
+  flex: 1;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.bc-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.bc-title-row .card-title { flex: 1; min-width: 0; }
+.bc-price {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--terracotta);
+  background: rgba(194, 65, 12, 0.08);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bc-pub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 140px;
+}
+
+/* 库存进度条 */
+.bc-stock-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+.bc-stock-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(43, 37, 32, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.bc-stock-fill {
+  height: 100%;
+  background: var(--forest);
+  border-radius: 2px;
+  transition: width 0.4s var(--ease);
+}
+.bc-stock-fill[data-low="1"] { background: var(--terracotta); }
+.bc-stock-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-mute);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* ============================================================
+   图书详情对话框
+   ============================================================ */
+.book-detail-dialog { max-width: 600px; }
+.book-detail-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  overflow: hidden;
+}
+.book-detail-body .bd-hero {
+  flex-shrink: 0;
+  margin: 0;
+  border-radius: 0;
+  border-bottom: 1px solid var(--line);
+}
+.book-detail-body .bd-info-grid {
+  flex-shrink: 0;
+  margin: 0;
+  border-radius: 0;
+  border-width: 0 0 1px 0;
+}
+.book-detail-body .bd-desc-scroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding: 22px 24px;
+}
+.bd-hero {
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, rgba(26,58,46,0.06), rgba(184,146,74,0.06));
+  border-left: 4px solid var(--forest);
+}
+.bd-hero[data-cat="1"] { border-left-color: #1a3a2e; }
+.bd-hero[data-cat="2"] { border-left-color: #b85a3e; }
+.bd-hero[data-cat="3"] { border-left-color: #8c6d3f; }
+.bd-hero[data-cat="4"] { border-left-color: #4a5d4f; }
+.bd-hero-cat {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 6px;
+}
+.bd-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--forest);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.bd-author {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-mute);
+  font-style: italic;
+}
+
+.bd-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+.bd-info-item {
+  background: var(--surface);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.bd-info-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.bd-info-val {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink);
+  font-weight: 500;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+.bd-desc-section {
+  background: rgba(26, 58, 46, 0.03);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.bd-section-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--forest);
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+.bd-desc-full {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .card-title {
   font-family: var(--font-display);

@@ -53,6 +53,7 @@ export default function ReaderBooksView() {
   const [applyForm, setApplyForm] = useState<ApplyForm>(emptyApply)
   const [reviewDialog, setReviewDialog] = useState<Book | null>(null)
   const [reviewForm, setReviewForm] = useState<ReviewForm>(emptyReview)
+  const [detailBook, setDetailBook] = useState<Book | null>(null)
 
   /* ----- 图书分页列表 ----- */
   const { data: pageData, isLoading, refetch } = useQuery<BookPageData>({
@@ -256,36 +257,63 @@ export default function ReaderBooksView() {
       ) : (
         <>
           <div className="card-grid">
-            {list.map((b) => (
-              <div className="browse-card" key={b.id}>
-                <div className="card-title">{b.name}</div>
-                <div className="card-meta">
-                  <span>{b.author || '佚名'}</span>
-                  <span>·</span>
-                  <span>{catName(b.categoryId)}</span>
-                </div>
-                {b.publisher && (
-                  <div className="card-meta">
-                    <span>{b.publisher}</span>
-                    {b.isbn && <span>· {b.isbn}</span>}
+            {list.map((b) => {
+              const stock = b.stock ?? 0
+              const total = b.totalStock ?? 1
+              const stockPct = total > 0 ? Math.min(100, (stock / total) * 100) : 0
+              const year = b.publishDate ? String(b.publishDate).slice(0, 4) : ''
+              return (
+                <div
+                  className="book-card"
+                  key={b.id}
+                  onClick={() => setDetailBook(b)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') setDetailBook(b) }}
+                >
+                  <div className="bc-spine" data-cat={b.categoryId ?? 0}>
+                    <span className="bc-cat-label">{catName(b.categoryId)}</span>
                   </div>
-                )}
-                {b.description && <div className="card-desc">{b.description}</div>}
-                <div className="card-foot">
-                  {stockBadge(b.stock ?? 0)}
-                  <div style={{ display: 'flex', gap: '6px' }}>
-                    <button className="mini-btn" onClick={() => openReview(b)}>评价</button>
-                    <button
-                      className="mini-btn primary"
-                      disabled={(b.stock ?? 0) <= 0}
-                      onClick={() => openApply(b)}
-                    >
-                      申请借阅
-                    </button>
+                  <div className="bc-body">
+                    <div className="bc-title-row">
+                      <h3 className="card-title">{b.name}</h3>
+                      {b.price != null && Number(b.price) > 0 && (
+                        <span className="bc-price">¥{Number(b.price).toFixed(2)}</span>
+                      )}
+                    </div>
+                    <div className="card-meta">
+                      <span>{b.author || '佚名'}</span>
+                      {year && <><span>·</span><span>{year}</span></>}
+                      {b.publisher && <><span>·</span><span className="bc-pub">{b.publisher}</span></>}
+                    </div>
+                    <p className="card-desc">{b.description || '暂无简介'}</p>
+                    <div className="bc-stock-wrap">
+                      <div className="bc-stock-bar">
+                        <div
+                          className="bc-stock-fill"
+                          style={{ width: `${stockPct}%` }}
+                          data-low={stock <= 3 ? '1' : undefined}
+                        />
+                      </div>
+                      <span className="bc-stock-num">{stock}/{total}</span>
+                    </div>
+                    <div className="card-foot" onClick={(e) => e.stopPropagation()}>
+                      {stockBadge(stock)}
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button className="mini-btn" onClick={() => openReview(b)}>评价</button>
+                        <button
+                          className="mini-btn primary"
+                          disabled={stock <= 0}
+                          onClick={() => openApply(b)}
+                        >
+                          申请借阅
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           <div className="pagination">
@@ -453,6 +481,81 @@ export default function ReaderBooksView() {
                 onClick={submitReview}
               >
                 {reviewMutation.isPending ? '提交中...' : myReview ? '更新评价' : '发表评价'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 图书详情对话框 */}
+      {detailBook && (
+        <div className="dialog-mask" onClick={() => setDetailBook(null)}>
+          <div className="dialog-box book-detail-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="dialog-header">
+              <div className="dialog-title">图书详情</div>
+              <button className="dialog-close" onClick={() => setDetailBook(null)}>×</button>
+            </div>
+            <div className="dialog-body book-detail-body">
+              <div className="bd-hero" data-cat={detailBook.categoryId ?? 0}>
+                <div className="bd-hero-cat">{catName(detailBook.categoryId)}</div>
+                <h2 className="bd-title">{detailBook.name}</h2>
+                <div className="bd-author">{detailBook.author || '佚名'}</div>
+              </div>
+
+              <div className="bd-info-grid">
+                <div className="bd-info-item">
+                  <span className="bd-info-label">出版社</span>
+                  <span className="bd-info-val">{detailBook.publisher || '—'}</span>
+                </div>
+                <div className="bd-info-item">
+                  <span className="bd-info-label">出版日期</span>
+                  <span className="bd-info-val">{detailBook.publishDate || '—'}</span>
+                </div>
+                <div className="bd-info-item">
+                  <span className="bd-info-label">ISBN</span>
+                  <span className="bd-info-val">{detailBook.isbn || '—'}</span>
+                </div>
+                <div className="bd-info-item">
+                  <span className="bd-info-label">价格</span>
+                  <span className="bd-info-val">
+                    {detailBook.price != null && Number(detailBook.price) > 0
+                      ? `¥${Number(detailBook.price).toFixed(2)}`
+                      : '—'}
+                  </span>
+                </div>
+                <div className="bd-info-item">
+                  <span className="bd-info-label">馆藏总量</span>
+                  <span className="bd-info-val">{detailBook.totalStock ?? 0} 册</span>
+                </div>
+                <div className="bd-info-item">
+                  <span className="bd-info-label">可借库存</span>
+                  <span className="bd-info-val" style={{
+                    color: (detailBook.stock ?? 0) <= 0 ? 'var(--terracotta)' : 'var(--forest)',
+                    fontWeight: 700,
+                  }}>
+                    {(detailBook.stock ?? 0) <= 0 ? '暂无库存' : `${detailBook.stock} 册`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="bd-desc-scroll">
+                <div className="bd-desc-section">
+                  <div className="bd-section-label">内容简介</div>
+                  <p className="bd-desc-full">{detailBook.description || '本书暂无简介。'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="dialog-foot">
+              <button className="lib-btn" onClick={() => setDetailBook(null)}>关闭</button>
+              <button className="lib-btn" onClick={() => { openReview(detailBook); setDetailBook(null) }}>
+                查看评价
+              </button>
+              <button
+                className="lib-btn primary"
+                disabled={(detailBook.stock ?? 0) <= 0}
+                onClick={() => { openApply(detailBook); setDetailBook(null) }}
+              >
+                申请借阅
               </button>
             </div>
           </div>
