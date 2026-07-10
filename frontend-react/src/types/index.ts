@@ -113,7 +113,7 @@ export interface Notice {
   publishDate?: string
   publisherId?: number
   publisherName?: string
-  pinned?: boolean
+  pinned?: number
   status?: string
   createTime?: string
 }

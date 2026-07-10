@@ -138,7 +138,14 @@ export default function NoticesView() {
       showToast('标题和内容必填', 'error')
       return
     }
-    const payload: Partial<Notice> = { ...form, id: editing?.id }
+    const payload: Partial<Notice> = {
+      id: editing?.id,
+      title: form.title,
+      content: form.content,
+      type: form.type,
+      status: form.status,
+      pinned: form.pinned ? 1 : 0,
+    }
     saveMutation.mutate(payload)
   }
 
