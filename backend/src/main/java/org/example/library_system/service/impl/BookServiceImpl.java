@@ -25,7 +25,7 @@ public class BookServiceImpl implements BookService {
     public PageResult<Book> page(BookQuery query) {
         List<Book> records = bookMapper.findByQuery(query);
         long total = bookMapper.countByQuery(query);
-        return new PageResult<>(records, total, query.getPage(), query.getSize());
+        return new PageResult<>(records, total, query.page(), query.size());
     }
 
     @Override
@@ -35,7 +35,6 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public boolean save(Book book) {
-        // 入藏时若未指定 stock,默认等于 totalStock
         if (book.getTotalStock() != null && book.getStock() == null) {
             book.setStock(book.getTotalStock());
         }

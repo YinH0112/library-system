@@ -21,32 +21,30 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public User login(AuthDTO authDTO) {
-        User user = userMapper.findByUsername(authDTO.getUsername());
+        User user = userMapper.findByUsername(authDTO.username());
         if (user == null) {
             return null;
         }
         if ("DISABLED".equals(user.getStatus())) {
             return null;
         }
-        if (!passwordEncoder.matches(authDTO.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(authDTO.password(), user.getPassword())) {
             return null;
         }
-        // 不返回密码
         user.setPassword(null);
         return user;
     }
 
     @Override
     public User register(AuthDTO authDTO) {
-        // 检查用户名是否已存在
-        if (userMapper.findByUsername(authDTO.getUsername()) != null) {
+        if (userMapper.findByUsername(authDTO.username()) != null) {
             return null;
         }
         User user = new User();
-        user.setUsername(authDTO.getUsername());
-        user.setPassword(passwordEncoder.encode(authDTO.getPassword()));
-        user.setRole(authDTO.getRole() != null ? authDTO.getRole() : "READER");
-        user.setReaderId(authDTO.getReaderId());
+        user.setUsername(authDTO.username());
+        user.setPassword(passwordEncoder.encode(authDTO.password()));
+        user.setRole(authDTO.role() != null ? authDTO.role() : "READER");
+        user.setReaderId(authDTO.readerId());
         user.setStatus("ACTIVE");
         userMapper.insert(user);
         user.setPassword(null);
@@ -59,10 +57,10 @@ public class AuthServiceImpl implements AuthService {
         if (user == null) {
             return false;
         }
-        if (!passwordEncoder.matches(authDTO.getOldPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(authDTO.oldPassword(), user.getPassword())) {
             return false;
         }
-        String encoded = passwordEncoder.encode(authDTO.getNewPassword());
+        String encoded = passwordEncoder.encode(authDTO.newPassword());
         return userMapper.updatePassword(userId, encoded) > 0;
     }
 
@@ -94,7 +92,6 @@ public class AuthServiceImpl implements AuthService {
     public boolean removeUser(Integer userId) {
         User user = userMapper.findById(userId);
         if (user == null) return false;
-        // 不允许删除最后一个管理员
         if ("ADMIN".equals(user.getRole())) {
             List<User> admins = userMapper.findAll("ADMIN");
             if (admins.size() <= 1) {

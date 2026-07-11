@@ -29,20 +29,19 @@ public class BorrowServiceImpl implements BorrowService {
     @Override
     @Transactional
     public Result borrow(BorrowAction action) {
-        Book book = bookMapper.findById(action.getBookId());
+        Book book = bookMapper.findById(action.bookId());
         if (book == null) {
             return new Result(false, "图书不存在", null);
         }
         if (book.getStock() == null || book.getStock() <= 0) {
             return new Result(false, "库存不足,无法借出", null);
         }
-        int active = borrowMapper.countActiveByReader(action.getReaderId());
+        int active = borrowMapper.countActiveByReader(action.readerId());
         if (active >= MAX_ACTIVE_BORROWS) {
             return new Result(false, "已达借阅上限(" + MAX_ACTIVE_BORROWS + " 本)", null);
         }
 
-        // 扣减库存(乐观条件:stock > 0)
-        int affected = bookMapper.decreaseStock(action.getBookId());
+        int affected = bookMapper.decreaseStock(action.bookId());
         if (affected == 0) {
             return new Result(false, "库存竞争失败,请重试", null);
         }
@@ -51,8 +50,8 @@ public class BorrowServiceImpl implements BorrowService {
         LocalDate due = action.computeDueDate(today);
 
         Borrow record = new Borrow();
-        record.setBookId(action.getBookId());
-        record.setReaderId(action.getReaderId());
+        record.setBookId(action.bookId());
+        record.setReaderId(action.readerId());
         record.setBorrowDate(today);
         record.setDueDate(due);
         record.setStatus("BORROWED");
