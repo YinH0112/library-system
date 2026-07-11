@@ -3,6 +3,7 @@ import { ref, shallowRef, onMounted, onUnmounted, provide } from 'vue'
 import { authStore } from './store/auth.js'
 import SidebarNav from './components/SidebarNav.vue'
 import Toast from './components/Toast.vue'
+import Avatar from './components/Avatar.vue'
 import ConfirmDialog from './components/ConfirmDialog.vue'
 import LoginView from './views/LoginView.vue'
 // 管理员视图
@@ -128,6 +129,7 @@ onUnmounted(() => {
           <span class="status-dot"></span>
           <span class="topbar-text">SYSTEM ONLINE</span>
           <span class="topbar-divider">·</span>
+          <Avatar :name="authStore.state.user?.username || ''" :size="28" style="margin-right: 4px;" />
           <span class="topbar-text">{{ authStore.state.user?.username }}</span>
           <span :class="['role-tag', authStore.isAdmin() ? 'role-admin' : 'role-reader']">
             {{ authStore.state.user?.role }}
@@ -174,83 +176,84 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* 启动屏 — 羊皮纸底 + 居中衬线标题 + 加载点动画 */
 .boot-screen {
   min-height: 100vh;
   background: var(--bg);
-  color: var(--ink);
+  color: var(--foreground);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  gap: 16px;
 }
 .boot-text {
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-style: italic;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--ink);
-  position: relative;
-}
-/* 加载点动画(纯 CSS,不改动模板) */
-.boot-text::after {
-  content: '· · ·';
-  display: inline-block;
-  margin-left: 10px;
-  font-style: normal;
+  font-family: var(--font-editorial);
   font-size: 28px;
-  line-height: 0;
-  color: var(--yellow);
-  letter-spacing: 0.1em;
-  animation: dotFade 1.4s infinite ease-in-out;
+  font-style: italic;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--foreground);
 }
-@keyframes dotFade {
-  0%, 100% { opacity: 0.2; }
-  50% { opacity: 1; }
+.boot-text::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-left: 12px;
+  background: var(--primary);
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: dotPulse 1.4s infinite ease-in-out;
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
 }
 
 .app-root { padding-bottom: 60px; }
 
-/* 顶栏 — 纸白底 + 细底边框 + 柔阴影,克制书卷感 */
 .topbar {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 16px;
-  background: var(--white);
-  color: var(--ink);
-  border-bottom: var(--border);
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  padding: 10px 20px;
+  padding: 10px 22px;
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  border-radius: 2px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  border-radius: var(--radius);
+  margin-bottom: 2px;
 }
+
 .topbar-left, .topbar-right { display: flex; align-items: center; gap: 10px; }
-.topbar-divider { opacity: 0.3; }
+.topbar-divider { opacity: 0.2; }
+
 .status-dot {
   width: 7px; height: 7px;
-  background: var(--green);
+  background: var(--success);
   border-radius: 50%;
   display: inline-block;
-  animation: blink 1.5s infinite;
+  animation: blink 2s infinite;
+  box-shadow: 0 0 6px rgba(140,160,111,0.4);
 }
-/* 角色徽章 — 细边框 + 透明背景 + 文字色,不用亮色块 */
+
 .role-tag {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  padding: 2px 8px;
-  border: 1px solid rgba(43, 37, 32, 0.28);
-  background: transparent;
-  border-radius: 2px;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
   text-transform: uppercase;
 }
-.role-admin { color: var(--yellow); border-color: rgba(184, 146, 74, 0.45); }
-.role-reader { color: var(--green); border-color: rgba(92, 122, 92, 0.45); }
+.role-admin { background: var(--warning-bg); color: var(--warning); }
+.role-reader { background: var(--success-bg); color: var(--success); }
 
-.topbar-center { overflow: hidden; white-space: nowrap; opacity: 0.45; }
+.topbar-center { overflow: hidden; white-space: nowrap; opacity: 0.25; }
 .marquee {
   display: inline-block;
   animation: marquee 30s linear infinite;
@@ -259,49 +262,48 @@ onUnmounted(() => {
 .marquee span {
   display: inline-block;
   padding-right: 40px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   font-style: italic;
+  font-size: 11px;
 }
 
-/* 登出按钮 — 细边框 + hover 变墨色,不用硬阴影 */
 .logout-btn {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
   background: transparent;
-  color: var(--ink);
-  border: 1px solid rgba(43, 37, 32, 0.28);
-  padding: 5px 14px;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  padding: 7px 16px;
   cursor: pointer;
-  border-radius: 2px;
-  transition: all 0.2s ease;
-  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  letter-spacing: 0.02em;
 }
 .logout-btn:hover {
-  background: var(--ink);
+  background: var(--foreground);
   color: var(--bg);
-  border-color: var(--ink);
+  border-color: var(--foreground);
 }
 
-/* 页脚 — 极简细线 + mono 字体,低透明度 */
-.page-footer { margin-top: 60px; }
+.page-footer { margin-top: 52px; }
 .footer-line {
   height: 1px;
-  background: rgba(43, 37, 32, 0.16);
-  margin-bottom: 14px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin-bottom: 16px;
 }
 .footer-content {
   display: flex;
   justify-content: center;
   gap: 12px;
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  opacity: 0.45;
+  font-size: 9px;
+  color: var(--muted);
   flex-wrap: wrap;
-  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
 }
-.footer-dot { opacity: 0.6; }
+.footer-dot { opacity: 0.4; }
 
 @media (max-width: 768px) {
   .topbar-center { display: none; }

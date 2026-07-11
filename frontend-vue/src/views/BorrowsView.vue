@@ -156,17 +156,17 @@ defineExpose({ reload: load })
 
 <style scoped>
 .mini-btn {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  padding: 4px 10px;
-  border: 1px solid rgba(43, 37, 32, 0.28);
-  border-radius: 2px;
-  background: var(--white);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.16s ease;
 }
-.mini-btn.edit:hover { background: rgba(92, 122, 92, 0.15); color: var(--green); border-color: rgba(92, 122, 92, 0.5); }
+.mini-btn.edit:hover { background: var(--success-bg); color: var(--success); border-color: rgba(140,160,111,0.4); }
 .dialog-enter-active, .dialog-leave-active { transition: opacity 0.2s; }
 .dialog-enter-from, .dialog-leave-to { opacity: 0; }
 </style>

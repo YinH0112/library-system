@@ -8,10 +8,6 @@ const props = defineProps({
 
 const emit = defineEmits(['edit', 'delete'])
 
-// 循环色板：根据 index 给卡片不同的色块
-const palette = ['pink', 'yellow', 'blue', 'green', 'purple', 'orange']
-const colorClass = computed(() => `card-${palette[props.index % palette.length]}`)
-
 const formattedPrice = computed(() => {
   if (props.book.price == null) return '—'
   return '¥' + Number(props.book.price).toFixed(2)
@@ -19,243 +15,252 @@ const formattedPrice = computed(() => {
 
 const paddedId = computed(() => String(props.book.id).padStart(3, '0'))
 
-const stockClass = computed(() => {
-  if (!props.book.stock || props.book.stock <= 0) return 'stock-out'
-  if (props.book.stock <= 1) return 'stock-low'
-  return 'stock-ok'
+const stockInfo = computed(() => {
+  const s = props.book.stock || 0
+  if (s <= 0) return { label: '缺货', cls: 'badge-out' }
+  if (s <= 2) return { label: '库存紧张', cls: 'badge-low' }
+  return { label: '可借', cls: 'badge-available' }
 })
 </script>
 
 <template>
-  <article
-    class="book-card"
-    :class="colorClass"
-    :style="{ animationDelay: (index * 0.08) + 's' }">
+  <article class="book-card" :style="{ animationDelay: (index * 0.04) + 's' }">
+    <!-- 书脊色条 -->
+    <div class="spine"></div>
 
-    <!-- 顶部色块标签 -->
-    <div class="card-tag">
-      <span class="tag-id">#{{ paddedId }}</span>
-      <span class="tag-label">VOL</span>
-    </div>
-
-    <!-- 书名（超大） -->
-    <h3 class="card-title" :title="book.name">{{ book.name }}</h3>
-
-    <!-- 作者 -->
-    <p class="card-author">
-      <span class="author-label">BY</span>
-      <span class="author-name">{{ book.author || '佚名' }}</span>
-    </p>
-
-    <!-- 信息块 -->
-    <div class="card-info">
-      <div v-if="book.categoryName" class="info-row">
-        <span class="info-key">分类</span>
-        <span class="info-val">{{ book.categoryName }}</span>
+    <div class="card-body">
+      <!-- 顶部：分类 + ID -->
+      <div class="card-top">
+        <span class="card-tag" v-if="book.categoryName">{{ book.categoryName }}</span>
+        <span class="card-id">#{{ paddedId }}</span>
       </div>
-      <div class="info-row">
-        <span class="info-key">出版社</span>
-        <span class="info-val">{{ book.publisher || '—' }}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-key">定价</span>
-        <span class="info-val price">{{ formattedPrice }}</span>
-      </div>
-      <div class="info-row">
-        <span class="info-key">库存</span>
-        <span :class="['info-val', 'stock-badge', stockClass]">{{ book.stock }} / {{ book.totalStock }}</span>
-      </div>
-    </div>
 
-    <!-- 操作按钮 -->
-    <div class="card-actions">
-      <button class="action-btn edit" @click="emit('edit', book)">
-        <span>编辑</span>
-      </button>
-      <button class="action-btn delete" @click="emit('delete', book)">
-        <span>删除</span>
-      </button>
+      <!-- 书名 -->
+      <h3 class="card-title" :title="book.name">{{ book.name }}</h3>
+
+      <!-- 作者 -->
+      <p class="card-author">{{ book.author || '佚名' }}</p>
+
+      <!-- 元数据 -->
+      <div class="card-meta">
+        <span class="meta-label">出版社</span>
+        <span class="meta-val">{{ book.publisher || '—' }}</span>
+      </div>
+      <div class="card-meta" v-if="book.isbn">
+        <span class="meta-label">ISBN</span>
+        <span class="meta-val">{{ book.isbn }}</span>
+      </div>
+
+      <!-- 分割线 -->
+      <div class="card-divider"></div>
+
+      <!-- 底部 -->
+      <div class="card-foot">
+        <div class="foot-left">
+          <span class="card-price">{{ formattedPrice }}</span>
+          <span :class="['badge', stockInfo.cls]">{{ stockInfo.label }}</span>
+        </div>
+        <div class="foot-right">
+          <button class="action edit" title="编辑" @click="emit('edit', book)">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11.5 1.5l3 3L5 14H2v-3z"/><path d="M9.5 3.5l3 3"/></svg>
+          </button>
+          <button class="action delete" title="删除" @click="emit('delete', book)">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 4h12M5.3 4V2.7a.7.7 0 01.7-.7h4a.7.7 0 01.7.7V4m1.3 0v9.3a.7.7 0 01-.7.7H5.7a.7.7 0 01-.7-.7V4h6.6"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
   </article>
 </template>
 
 <style scoped>
 .book-card {
-  background: var(--white);
-  border: var(--border-thick);
-  box-shadow: var(--shadow);
-  padding: 0;
-  display: flex;
-  flex-direction: column;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
   position: relative;
+  display: flex;
   opacity: 0;
-  animation: bounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-  transition: transform 0.15s, box-shadow 0.15s;
+  animation: cardReveal 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.25s;
 }
 
 .book-card:hover {
-  transform: translate(-4px, -4px);
-  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--border-subtle);
 }
 
-/* 顶部色块 */
-.card-tag {
+/* 书脊色条 — 暖色渐变 */
+.spine {
+  width: 4px;
+  flex-shrink: 0;
+  background: linear-gradient(180deg, var(--primary) 0%, #e8946a 50%, var(--primary-hover) 100%);
+}
+
+.card-body {
+  flex: 1;
+  padding: 18px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* 顶部行 */
+.card-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 14px;
-  border-bottom: var(--border);
+  margin-bottom: 12px;
+}
+
+.card-tag {
   font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  color: var(--primary);
+  background: var(--warning-bg);
+  padding: 3px 9px;
+  border-radius: var(--radius-xs);
 }
 
-.tag-id {
-  font-family: var(--font-display);
-  font-size: 18px;
+.card-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  letter-spacing: 0.04em;
+  opacity: 0.5;
 }
 
-.tag-label {
-  opacity: 0.6;
-}
-
-/* 各色系 */
-.card-pink .card-tag { background: var(--pink); color: var(--white); }
-.card-yellow .card-tag { background: var(--yellow); }
-.card-blue .card-tag { background: var(--blue); }
-.card-green .card-tag { background: var(--green); }
-.card-purple .card-tag { background: var(--purple); }
-.card-orange .card-tag { background: var(--orange); color: var(--white); }
-
-/* 标题 */
+/* 书名 — 衬线字体，书卷气 */
 .card-title {
-  font-family: var(--font-cn);
-  font-size: 26px;
-  font-weight: 900;
-  line-height: 1.15;
-  padding: 18px 16px 8px;
-  color: var(--ink);
-  word-break: break-word;
-  min-height: 60px;
+  font-family: var(--font-editorial);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
 }
 
 /* 作者 */
 .card-author {
-  padding: 0 16px 14px;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: 13px;
+  font-style: italic;
+  color: var(--muted);
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+/* 元数据 — label + value 行 */
+.card-meta {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 2px dashed var(--ink);
-}
-
-.author-label {
-  background: var(--ink);
-  color: var(--bg);
-  padding: 2px 6px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-}
-
-.author-name {
-  font-weight: 700;
-}
-
-/* 信息块 */
-.card-info {
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
   align-items: baseline;
   gap: 8px;
+  margin-bottom: 4px;
 }
-
-.info-key {
+.meta-label {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 9px;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  opacity: 0.7;
+  color: var(--muted-foreground);
+  min-width: 42px;
+  flex-shrink: 0;
 }
-
-.info-val {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
-  text-align: right;
+.meta-val {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--foreground-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.info-val.price {
-  font-family: var(--font-display);
-  font-size: 20px;
-  color: var(--ink);
-  background: var(--yellow);
-  padding: 2px 8px;
-  border: 2px solid var(--ink);
+/* 分割线 */
+.card-divider {
+  flex: 1;
+  border-top: 1px solid var(--border-faint);
+  margin: 10px 0 0;
+  min-height: 10px;
+}
+
+/* 底部 */
+.card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  gap: 8px;
+}
+.foot-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* 价格 — 衬线字体 */
+.card-price {
+  font-family: var(--font-editorial);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+  font-feature-settings: 'tnum';
+  line-height: 1;
 }
 
 /* 操作 */
-.card-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-top: var(--border);
+.foot-right {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
 }
-
-.action-btn {
-  font-family: var(--font-display);
-  font-size: 14px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 12px;
-  cursor: pointer;
+.action {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
-  transition: all 0.1s;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.action.edit:hover {
+  background: var(--warning-bg);
+  color: var(--primary);
+}
+.action.delete:hover {
+  background: #fde8e8;
+  color: var(--destructive);
+}
+.action:active {
+  transform: scale(0.88);
 }
 
-.action-btn.edit {
-  background: var(--white);
-  color: var(--ink);
-  border-right: 2px solid var(--ink);
+@keyframes cardReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
-
-.action-btn.edit:hover {
-  background: var(--yellow);
-}
-
-.action-btn.delete {
-  background: var(--white);
-  color: var(--ink);
-}
-
-.action-btn.delete:hover {
-  background: var(--pink);
-  color: var(--white);
-}
-
-.action-btn:active {
-  transform: scale(0.96);
-}
-
-.stock-badge {
-  font-family: var(--font-display);
-  font-size: 14px;
-  padding: 2px 8px;
-  border: 2px solid var(--ink);
-}
-.stock-ok { background: var(--green); }
-.stock-low { background: var(--yellow); }
-.stock-out { background: var(--pink); color: var(--white); }
 </style>

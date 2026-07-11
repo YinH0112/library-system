@@ -48,6 +48,6 @@ defineExpose({ open })
 }
 .dialog-enter-from, .dialog-leave-to { opacity: 0; }
 .dialog-enter-from .confirm-box, .dialog-leave-to .confirm-box {
-  transform: scale(0.85) rotate(-2deg);
+  transform: scale(0.95);
 }
 </style>

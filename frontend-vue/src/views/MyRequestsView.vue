@@ -112,32 +112,33 @@ defineExpose({ reload: load })
 .loading-block, .empty-block {
   padding: 60px;
   text-align: center;
-  background: var(--white);
-  border: var(--border);
-  box-shadow: var(--shadow);
-  font-family: var(--font-mono);
-  letter-spacing: 0.1em;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--muted);
+  border-radius: var(--radius);
 }
-.badge-pending { background: rgba(184, 146, 74, 0.18); color: var(--yellow); border: 1px solid rgba(184, 146, 74, 0.4); }
-.badge-approved { background: rgba(92, 122, 92, 0.18); color: var(--green); border: 1px solid rgba(92, 122, 92, 0.4); }
-.badge-rejected { background: rgba(139, 58, 58, 0.18); color: var(--pink); border: 1px solid rgba(139, 58, 58, 0.4); }
-.badge-cancelled { background: rgba(43, 37, 32, 0.12); color: var(--ink); opacity: 0.7; border: 1px solid rgba(43, 37, 32, 0.2); }
+.badge-pending { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(217,119,87,0.3); }
+.badge-approved { background: var(--success-bg); color: var(--success); border: 1px solid rgba(140,160,111,0.3); }
+.badge-rejected { background: #fcdede; color: var(--destructive); border: 1px solid rgba(239,68,68,0.3); }
+.badge-cancelled { background: var(--bg-muted); color: var(--muted); border: 1px solid var(--border); }
 .mono { font-family: var(--font-mono); }
-.bold { font-weight: 700; }
-.small { font-size: 11px; }
+.bold { font-weight: 600; }
+.small { font-size: 11px; color: var(--muted); }
 .mini-btn {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 10px;
-  background: var(--white);
-  border: 1px solid rgba(43, 37, 32, 0.28);
-  border-radius: 2px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  letter-spacing: 0.05em;
-  transition: all 0.2s ease;
+  transition: all 0.16s ease;
 }
-.mini-btn:hover { background: rgba(184, 146, 74, 0.15); color: var(--yellow); border-color: rgba(184, 146, 74, 0.5); }
-.mini-btn.danger { background: rgba(139, 58, 58, 0.15); color: var(--pink); border-color: rgba(139, 58, 58, 0.5); }
-.mini-btn.danger:hover { background: rgba(139, 58, 58, 0.25); color: var(--pink); border-color: rgba(139, 58, 58, 0.7); }
+.mini-btn:hover { background: var(--warning-bg); color: var(--warning); border-color: rgba(217,119,87,0.4); }
+.mini-btn.danger { background: #fcdede; color: var(--destructive); border-color: rgba(239,68,68,0.4); }
+.mini-btn.danger:hover { background: var(--destructive); color: white; border-color: var(--destructive); }
 </style>

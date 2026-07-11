@@ -2,6 +2,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { AuthAPI, ReaderAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
+import Avatar from '../components/Avatar.vue'
 
 const emit = defineEmits(['toast'])
 
@@ -58,6 +59,14 @@ onMounted(loadReader)
   <div class="profile-tabs">
     <button :class="['tab-btn', { active: tab === 'info' }]" @click="tab = 'info'">个人信息</button>
     <button :class="['tab-btn', { active: tab === 'security' }]" @click="tab = 'security'">安全设置</button>
+  </div>
+
+  <div class="user-info-row">
+    <Avatar :name="authStore.state.user?.username || ''" :size="48" />
+    <div>
+      <div class="user-info-name">{{ authStore.state.user?.username || '—' }}</div>
+      <div class="user-info-role">{{ authStore.state.user?.role === 'ADMIN' ? '系统管理员' : '借阅者' }}</div>
+    </div>
   </div>
 
   <!-- 个人信息 -->
@@ -143,84 +152,117 @@ onMounted(loadReader)
   display: flex;
   gap: 0;
   margin-bottom: 24px;
-  border: var(--border);
-  box-shadow: var(--shadow-sm);
-  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2xs);
+  background: var(--card);
+  overflow: hidden;
 }
 .tab-btn {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  padding: 14px 28px;
-  background: var(--white);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 13px 32px;
+  background: var(--card);
   border: none;
   cursor: pointer;
-  border-right: 1px solid rgba(43, 37, 32, 0.16);
-  transition: all 0.2s ease;
+  border-right: 1px solid var(--border);
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  position: relative;
 }
 .tab-btn:last-child { border-right: none; }
-.tab-btn:hover { background: rgba(184, 146, 74, 0.12); color: var(--yellow); }
-.tab-btn.active { background: var(--ink); color: var(--bg); }
+.tab-btn:hover { background: var(--bg-subtle); color: var(--foreground); }
+.tab-btn.active {
+  background: var(--foreground);
+  color: var(--bg);
+  font-weight: 700;
+}
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: var(--primary);
+  border-radius: 2px 2px 0 0;
+}
 
 .profile-panel {
-  background: var(--white);
-  border: var(--border);
-  box-shadow: var(--shadow);
-  padding: 28px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  padding: 32px;
+  border-radius: var(--radius);
 }
 
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
 }
 .info-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 14px;
-  background: var(--bg);
-  border: 1px solid rgba(43, 37, 32, 0.16);
-  border-radius: 2px;
+  gap: 6px;
+  padding: 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-faint);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s;
+}
+.info-item:hover {
+  border-color: var(--border);
+  box-shadow: var(--shadow-xs);
 }
 .info-key {
   font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.2em;
+  font-size: 9px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  opacity: 0.6;
+  color: var(--muted);
+  font-weight: 600;
 }
 .info-val {
-  font-family: var(--font-cn);
-  font-size: 18px;
+  font-family: var(--font-sans);
+  font-size: 17px;
   font-weight: 700;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
 }
 
 .panel-title {
-  font-family: var(--font-cn);
-  font-size: 24px;
-  margin-bottom: 20px;
+  font-family: var(--font-editorial);
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 24px;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
 }
 .pwd-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-width: 460px;
+  gap: 18px;
+  max-width: 480px;
 }
-.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group { display: flex; flex-direction: column; gap: 7px; }
 .form-label { display: flex; align-items: center; gap: 10px; }
 .label-num {
-  font-family: var(--font-display);
-  font-size: 12px;
-  background: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 800;
+  background: var(--foreground);
   color: var(--bg);
-  padding: 2px 6px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
 }
 .label-text {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.15em;
-  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  font-weight: 600;
   text-transform: uppercase;
+  color: var(--muted);
 }
 </style>

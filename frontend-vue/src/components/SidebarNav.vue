@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { authStore } from '../store/auth.js'
+import Avatar from './Avatar.vue'
 
 defineProps({
   current: { type: String, required: true }
@@ -44,9 +45,13 @@ const sections = computed(() => {
     </div>
 
     <div class="sidebar-user" v-if="authStore.state.user">
-      <div class="user-label">// CURRENT USER</div>
-      <div class="user-name">{{ authStore.state.user.username }}</div>
-      <div class="user-role">{{ authStore.state.user.role }}</div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <Avatar :name="authStore.state.user.username || ''" :size="36" />
+        <div>
+          <div class="user-name">{{ authStore.state.user.username }}</div>
+          <div class="user-role">{{ authStore.state.user.role }}</div>
+        </div>
+      </div>
     </div>
 
     <nav v-for="section in sections" :key="section" class="nav-section">
@@ -64,36 +69,25 @@ const sections = computed(() => {
 </template>
 
 <style scoped>
-/* 侧边栏用户信息块 — 深色块 + 古金文字 + 细分隔边框
-   侧边栏主体(.app-sidebar / .sidebar-brand / .nav-item 等)已在全局 style.css 定义,此处只补 sidebar 独有样式 */
 .sidebar-user {
-  padding: 16px 22px;
-  border-bottom: 1px solid rgba(245, 239, 226, 0.1);
-  background: rgba(0, 0, 0, 0.15);
+  padding: 14px;
+  margin: 8px 12px;
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-2xs);
 }
-.user-label {
-  font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.22em;
-  color: var(--yellow);
-  opacity: 0.55;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
+
 .user-name {
-  font-family: var(--font-display);
-  font-size: 17px;
+  font-family: var(--font-sans);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--bg);
-  letter-spacing: 0.01em;
+  color: var(--foreground);
 }
+
 .user-role {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--yellow);
-  opacity: 0.7;
-  margin-top: 3px;
-  text-transform: uppercase;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--muted);
 }
 </style>

@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { StatsAPI, BorrowAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
+import SkeletonLoader from '../components/SkeletonLoader.vue'
 
 const emit = defineEmits(['toast'])
 
@@ -44,11 +45,34 @@ defineExpose({ reload: loadAll })
     <button class="brutalist-btn primary" @click="loadAll">↻ 刷新</button>
   </div>
 
-  <div v-if="loading" style="padding: 60px; text-align: center;">
-    <span style="font-family: var(--font-display); font-size: 24px;">LOADING...</span>
-  </div>
+  <!-- Loading -->
+  <SkeletonLoader v-if="loading" type="dashboard" :count="4" />
 
   <template v-else>
+    <!-- 欢迎横幅 -->
+    <div class="welcome-banner">
+      <div class="welcome-text">
+        <div class="welcome-greeting">WELCOME BACK</div>
+        <div class="welcome-name">{{ authStore.state.user?.readerName || authStore.state.user?.username }}</div>
+        <div class="welcome-sub">查看您的借阅状态与历史记录</div>
+      </div>
+      <div class="welcome-stats">
+        <div class="welcome-stat">
+          <div class="welcome-stat-num">{{ overview.activeBorrows || 0 }}</div>
+          <div class="welcome-stat-label">借出中</div>
+        </div>
+        <div class="welcome-stat">
+          <div class="welcome-stat-num">{{ overview.overdueCount || 0 }}</div>
+          <div class="welcome-stat-label">逾期</div>
+        </div>
+        <div class="welcome-stat">
+          <div class="welcome-stat-num">{{ overview.returnedCount || 0 }}</div>
+          <div class="welcome-stat-label">已归还</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 指标卡 -->
     <div class="dashboard-grid">
       <div class="metric-card pink">
         <div class="metric-label">累计借阅</div>
@@ -72,35 +96,41 @@ defineExpose({ reload: loadAll })
       </div>
     </div>
 
-    <div style="margin-top: 32px;">
-      <h2 class="view-title" style="font-size: 24px; margin-bottom: 12px;">最近借阅</h2>
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>图书</th>
-            <th>借出日</th>
-            <th>应还日</th>
-            <th>归还日</th>
-            <th>状态</th>
-            <th>罚款</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="b in myBorrows" :key="b.id">
-            <td>#{{ String(b.id).padStart(3, '0') }}</td>
-            <td style="font-family: var(--font-cn); font-weight: 700;">{{ b.bookName }}</td>
-            <td>{{ b.borrowDate }}</td>
-            <td>{{ b.dueDate }}</td>
-            <td>{{ b.returnDate || '—' }}</td>
-            <td><span :class="['badge', statusBadge(b.status)]">{{ b.status }}</span></td>
-            <td>¥{{ Number(b.fine || 0).toFixed(2) }}</td>
-          </tr>
-          <tr v-if="myBorrows.length === 0">
-            <td colspan="7" style="text-align: center; padding: 32px; opacity: 0.6;">暂无借阅记录</td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- 最近借阅 -->
+    <div class="section-divider">
+      <span class="section-divider-text">最近借阅</span>
     </div>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>图书</th>
+          <th>借出日</th>
+          <th>应还日</th>
+          <th>归还日</th>
+          <th>状态</th>
+          <th>罚款</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="b in myBorrows" :key="b.id">
+          <td>#{{ String(b.id).padStart(3, '0') }}</td>
+          <td style="font-weight: 700;">{{ b.bookName }}</td>
+          <td>{{ b.borrowDate }}</td>
+          <td>{{ b.dueDate }}</td>
+          <td>{{ b.returnDate || '—' }}</td>
+          <td><span :class="['badge', statusBadge(b.status)]">{{ b.status }}</span></td>
+          <td>¥{{ Number(b.fine || 0).toFixed(2) }}</td>
+        </tr>
+        <tr v-if="myBorrows.length === 0">
+          <td colspan="7" style="text-align: center; padding: 32px; opacity: 0.6; font-size: 13px;">暂无借阅记录</td>
+        </tr>
+      </tbody>
+    </table>
   </template>
 </template>
+
+<style scoped>
+/* No additional scoped styles needed — all handled by global CSS */
+</style>

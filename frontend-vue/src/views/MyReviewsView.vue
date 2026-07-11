@@ -74,51 +74,54 @@ defineExpose({ reload: load })
 <style scoped>
 .loading-block, .empty-block {
   padding: 60px; text-align: center;
-  background: var(--white); border: var(--border);
-  box-shadow: var(--shadow);
-  font-family: var(--font-mono); letter-spacing: 0.1em;
+  background: var(--card); border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-sans); font-size: 13px;
+  color: var(--muted);
+  border-radius: var(--radius);
 }
 .review-list { display: flex; flex-direction: column; gap: 12px; }
 .review-card {
-  background: var(--white);
-  border: var(--border);
-  border-radius: 2px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
-  padding: 14px 20px;
-  border-left: 3px solid var(--yellow);
-  transition: box-shadow 0.2s ease;
+  padding: 16px 20px;
+  border-left: 3px solid var(--primary);
+  transition: box-shadow 0.16s ease;
 }
-.review-card:hover { box-shadow: var(--shadow); }
+.review-card:hover { box-shadow: var(--shadow-md); }
 .review-head {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 8px; gap: 12px;
 }
 .head-left { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
 .review-book {
-  font-family: var(--font-cn); font-size: 20px; font-weight: 700;
+  font-family: var(--font-sans); font-size: 18px; font-weight: 700;
+  color: var(--foreground);
 }
-.review-stars { color: var(--yellow); font-size: 18px; letter-spacing: 2px; }
-.review-date { font-size: 11px; opacity: 0.6; }
+.review-stars { color: var(--primary); font-size: 16px; letter-spacing: 2px; }
+.review-date { font-size: 11px; color: var(--muted); }
 .review-content {
-  font-family: var(--font-cn); font-size: 14px;
-  line-height: 1.7; opacity: 0.85;
+  font-family: var(--font-sans); font-size: 14px;
+  line-height: 1.7; color: var(--foreground-secondary);
   padding: 8px 0;
 }
 .review-foot {
   display: flex; justify-content: space-between; align-items: center;
-  padding-top: 8px; border-top: 1px dashed rgba(43, 37, 32, 0.2);
+  padding-top: 8px; border-top: 1px solid var(--border-faint);
 }
 .rating-num {
-  font-family: var(--font-display); font-size: 18px;
+  font-family: var(--font-display); font-size: 16px;
+  color: var(--foreground);
 }
 .mini-btn {
-  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-  padding: 4px 12px; background: var(--white);
-  border: 1px solid rgba(43, 37, 32, 0.28); border-radius: 2px;
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  padding: 6px 14px; background: var(--card);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
   cursor: pointer;
-  letter-spacing: 0.05em;
-  transition: all 0.2s ease;
+  transition: all 0.16s ease;
 }
-.mini-btn.danger { background: rgba(139, 58, 58, 0.15); color: var(--pink); border-color: rgba(139, 58, 58, 0.5); }
-.mini-btn.danger:hover { background: rgba(139, 58, 58, 0.25); color: var(--pink); border-color: rgba(139, 58, 58, 0.7); }
+.mini-btn.danger { background: #fcdede; color: var(--destructive); border-color: rgba(239,68,68,0.4); }
+.mini-btn.danger:hover { background: var(--destructive); color: white; border-color: var(--destructive); }
 </style>

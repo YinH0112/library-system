@@ -1,6 +1,8 @@
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
 import { BorrowRequestAPI } from '../api.js'
+import SkeletonLoader from '../components/SkeletonLoader.vue'
+import EmptyState from '../components/EmptyState.vue'
 
 const emit = defineEmits(['toast', 'confirm'])
 
@@ -94,11 +96,9 @@ defineExpose({ reload: load })
     </div>
   </div>
 
-  <div v-if="loading" class="loading-block"><span>LOADING...</span></div>
+  <SkeletonLoader v-if="loading" type="card" :count="6" />
 
-  <div v-else-if="list.length === 0" class="empty-block">
-    <span>// 暂无{{ statusFilter ? '该状态' : '' }}申请</span>
-  </div>
+  <EmptyState v-else-if="list.length === 0" :message="'暂无' + (statusFilter ? '该状态' : '') + '申请'" />
 
   <div v-else class="requests-grid">
     <article v-for="r in list" :key="r.id" :class="['req-card', `req-${r.status.toLowerCase()}`]">
@@ -156,23 +156,25 @@ defineExpose({ reload: load })
 <style scoped>
 .pending-num {
   display: inline-block;
-  background: rgba(139, 58, 58, 0.15); color: var(--pink);
-  font-family: var(--font-display);
-  padding: 0 8px; border: 1px solid rgba(139, 58, 58, 0.4);
-  border-radius: 2px;
+  background: #fcdede; color: var(--destructive);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  padding: 2px 8px; border-radius: var(--radius-sm);
   margin: 0 4px;
+  font-size: 12px;
 }
 .pending-tip {
-  font-family: var(--font-mono); font-size: 11px;
-  color: var(--pink); letter-spacing: 0.1em;
+  font-family: var(--font-sans); font-size: 12px;
+  color: var(--destructive); letter-spacing: 0.02em;
+  font-weight: 500;
 }
 .loading-block, .empty-block {
   padding: 60px; text-align: center;
-  background: var(--white);
-  border: var(--border);
-  box-shadow: var(--shadow);
-  font-family: var(--font-mono);
-  letter-spacing: 0.1em;
+  background: var(--card); border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-sans); font-size: 13px;
+  color: var(--muted);
+  border-radius: var(--radius);
 }
 .requests-grid {
   display: grid;
@@ -180,106 +182,109 @@ defineExpose({ reload: load })
   gap: 16px;
 }
 .req-card {
-  background: var(--white);
-  border: var(--border);
-  border-radius: 2px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   display: flex; flex-direction: column;
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.16s ease;
 }
-.req-card:hover { box-shadow: var(--shadow); }
-.req-pending { border-left: 4px solid var(--yellow); }
-.req-approved { border-left: 4px solid var(--green); }
-.req-rejected { border-left: 4px solid var(--pink); }
-.req-cancelled { border-left: 4px solid var(--ink); opacity: 0.65; }
+.req-card:hover { box-shadow: var(--shadow-md); }
+.req-pending { border-left: 3px solid var(--warning); }
+.req-approved { border-left: 3px solid var(--success); }
+.req-rejected { border-left: 3px solid var(--destructive); }
+.req-cancelled { border-left: 3px solid var(--muted); opacity: 0.65; }
 .req-head {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 14px;
-  border-bottom: var(--border);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-faint);
   font-family: var(--font-mono); font-size: 12px;
 }
-.req-id { font-family: var(--font-display); font-size: 16px; }
+.req-id { font-family: var(--font-display); font-size: 16px; color: var(--foreground); }
 .req-book {
-  font-family: var(--font-cn); font-size: 22px; font-weight: 700;
+  font-family: var(--font-sans); font-size: 18px; font-weight: 700;
   padding: 12px 14px 8px; line-height: 1.2;
+  color: var(--foreground);
 }
 .req-meta { padding: 8px 14px; flex: 1; }
 .meta-row { display: flex; justify-content: space-between; align-items: baseline; padding: 4px 0; }
-.k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; opacity: 0.7; text-transform: uppercase; }
-.v { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
+.k { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase; }
+.v { font-family: var(--font-sans); font-size: 12px; font-weight: 600; color: var(--foreground); }
 .v.mono { font-family: var(--font-mono); }
-.v.small { font-size: 11px; font-weight: 400; max-width: 60%; text-align: right; font-family: var(--font-cn); }
-.badge-pending { background: rgba(184, 146, 74, 0.18); color: var(--yellow); border: 1px solid rgba(184, 146, 74, 0.4); }
-.badge-approved { background: rgba(92, 122, 92, 0.18); color: var(--green); border: 1px solid rgba(92, 122, 92, 0.4); }
-.badge-rejected { background: rgba(139, 58, 58, 0.18); color: var(--pink); border: 1px solid rgba(139, 58, 58, 0.4); }
-.badge-cancelled { background: rgba(43, 37, 32, 0.12); color: var(--ink); opacity: 0.7; border: 1px solid rgba(43, 37, 32, 0.2); }
+.v.small { font-size: 11px; font-weight: 400; max-width: 60%; text-align: right; color: var(--muted); }
+.badge-pending { background: var(--warning-bg); color: var(--warning); border: 1px solid rgba(217,119,87,0.3); }
+.badge-approved { background: var(--success-bg); color: var(--success); border: 1px solid rgba(140,160,111,0.3); }
+.badge-rejected { background: #fcdede; color: var(--destructive); border: 1px solid rgba(239,68,68,0.3); }
+.badge-cancelled { background: var(--bg-muted); color: var(--muted); border: 1px solid var(--border); }
 .req-actions {
   display: flex; gap: 8px;
-  padding: 10px 14px;
-  border-top: 1px dashed rgba(43, 37, 32, 0.2);
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-faint);
 }
 .req-actions .brutalist-btn { flex: 1; }
 
 .dialog-mask {
   position: fixed; inset: 0;
-  background: rgba(43, 37, 32, 0.45);
+  background: rgba(20,20,19,0.4);
+  backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
   z-index: 100; padding: 20px;
 }
 .dialog-box {
-  background: var(--bg);
-  border: var(--border);
-  border-radius: 3px;
-  box-shadow: var(--shadow-lg);
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
   width: 100%; max-width: 480px;
 }
 .dialog-head {
   display: flex; justify-content: space-between; align-items: center;
-  background: var(--ink); color: var(--bg);
-  padding: 10px 16px;
-  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.15em;
+  background: var(--foreground); color: var(--bg);
+  padding: 14px 18px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; font-weight: 500;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 .dialog-close {
-  background: rgba(255, 255, 255, 0.12); color: var(--bg);
-  border: 1px solid rgba(253, 251, 246, 0.25);
-  border-radius: 2px;
+  background: rgba(255,255,255,0.12); color: var(--bg);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: var(--radius-sm);
   width: 28px; height: 28px;
-  font-size: 18px; font-weight: 700;
+  font-size: 16px; font-weight: 600;
   cursor: pointer; line-height: 1;
-  transition: all 0.2s ease;
+  transition: all 0.16s ease;
+  display: flex; align-items: center; justify-content: center;
 }
-.dialog-close:hover { background: rgba(139, 58, 58, 0.6); }
+.dialog-close:hover { background: rgba(239,68,68,0.8); }
 .dialog-body { padding: 20px; }
-.dialog-title { font-family: var(--font-cn); font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-.dialog-sub { font-family: var(--font-mono); font-size: 11px; opacity: 0.7; margin-bottom: 16px; letter-spacing: 0.1em; }
+.dialog-title { font-family: var(--font-sans); font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+.dialog-sub { font-family: var(--font-mono); font-size: 11px; color: var(--muted); margin-bottom: 16px; letter-spacing: 0.06em; }
 .form-row { margin-bottom: 14px; }
 .form-label {
-  display: block; font-family: var(--font-mono); font-size: 11px;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  margin-bottom: 6px; opacity: 0.8;
+  display: block; font-family: var(--font-sans); font-size: 12px;
+  letter-spacing: 0.04em; font-weight: 600;
+  margin-bottom: 6px; color: var(--muted);
 }
 .form-input {
-  width: 100%; font-family: var(--font-mono); font-size: 13px;
-  padding: 8px 10px; background: var(--white);
-  border: 1px solid rgba(43, 37, 32, 0.28); border-radius: 2px;
+  width: 100%; font-family: var(--font-sans); font-size: 13px;
+  padding: 8px 12px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
   box-sizing: border-box;
   resize: vertical;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.16s ease;
+  outline: none;
 }
-.form-input:focus { outline: none; border-color: var(--yellow); }
+.form-input:focus { border-color: var(--ring); }
 .dialog-tip {
-  font-family: var(--font-cn); font-size: 12px;
-  opacity: 0.75; margin-top: 12px;
-  padding: 10px; background: rgba(184, 146, 74, 0.12);
-  color: var(--ink);
-  border: 1px solid rgba(184, 146, 74, 0.3);
-  border-radius: 2px;
+  font-family: var(--font-sans); font-size: 12px;
+  color: var(--muted); margin-top: 12px;
+  padding: 12px; background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   line-height: 1.6;
 }
 .dialog-foot {
   display: flex; gap: 10px; justify-content: flex-end;
-  padding: 14px 20px;
-  border-top: 1px solid rgba(43, 37, 32, 0.16);
-  background: var(--white);
+  padding: 14px 18px; border-top: 1px solid var(--border-faint);
+  background: var(--bg-subtle);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
 </style>
