@@ -47,3 +47,5 @@ logs/
 *.bak
 *.swp
 *~
+import-railway.ps1
+patches/0001-fix.patch

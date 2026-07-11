@@ -20,7 +20,9 @@ public class BorrowController {
 
     @GetMapping
     public Result<List<Borrow>> list(@RequestParam(required = false) String status,
-                                     @RequestParam(required = false) Integer readerId) {
+                                     @RequestParam(required = false) Integer readerId,
+                                     HttpServletRequest request) {
+        requireAdmin(request);
         return Result.success(borrowService.list(status, readerId));
     }
 
@@ -37,7 +39,6 @@ public class BorrowController {
         if (current == null) {
             return Result.error("未登录");
         }
-        // 借阅者只能查自己的;管理员可查任意
         if ("READER".equals(current.getRole()) && !readerId.equals(current.getReaderId())) {
             return Result.error("无权查看他人借阅记录");
         }
@@ -45,14 +46,23 @@ public class BorrowController {
     }
 
     @PostMapping("/borrow")
-    public Result<Void> borrow(@RequestBody BorrowAction action) {
+    public Result<Void> borrow(@RequestBody BorrowAction action, HttpServletRequest request) {
+        requireAdmin(request);
         BorrowService.Result r = borrowService.borrow(action);
         return r.isSuccess() ? Result.success() : Result.error(r.getMessage());
     }
 
     @PostMapping("/return/{id}")
-    public Result<Void> returnBook(@PathVariable Integer id) {
+    public Result<Void> returnBook(@PathVariable Integer id, HttpServletRequest request) {
+        requireAdmin(request);
         BorrowService.Result r = borrowService.returnBook(id);
         return r.isSuccess() ? Result.success() : Result.error(r.getMessage());
+    }
+
+    private void requireAdmin(HttpServletRequest request) {
+        User current = (User) request.getSession().getAttribute("currentUser");
+        if (current == null || !"ADMIN".equals(current.getRole())) {
+            throw new RuntimeException("权限不足");
+        }
     }
 }

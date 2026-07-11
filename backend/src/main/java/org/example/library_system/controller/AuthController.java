@@ -3,6 +3,7 @@ package org.example.library_system.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import org.example.library_system.common.Result;
+import org.example.library_system.config.LoginRateLimiter;
 import org.example.library_system.dto.AuthDTO;
 import org.example.library_system.entity.User;
 import org.example.library_system.service.AuthService;
@@ -16,13 +17,22 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
+    @Autowired
+    private LoginRateLimiter rateLimiter;
+
     @PostMapping("/login")
     public Result<User> login(@RequestBody AuthDTO authDTO, HttpServletRequest request) {
+        String clientIp = getClientIp(request);
+        if (!rateLimiter.allow(clientIp)) {
+            return Result.error("登录尝试过多，请1分钟后再试");
+        }
         User user = authService.login(authDTO);
         if (user == null) {
-            return Result.error("用户名或密码错误,或账号已禁用");
+            return Result.error("用户名或密码错误，或账号已禁用");
         }
-        request.getSession().setAttribute("currentUser", user);
+        request.getSession().invalidate();
+        HttpSession newSession = request.getSession(true);
+        newSession.setAttribute("currentUser", user);
         return Result.success(user);
     }
 
@@ -47,7 +57,6 @@ public class AuthController {
         if (user == null) {
             return Result.error("未登录");
         }
-        // 重新查询最新信息
         User fresh = authService.getCurrentUser(user.getId());
         request.getSession().setAttribute("currentUser", fresh);
         return Result.success(fresh);
@@ -63,5 +72,13 @@ public class AuthController {
             return Result.success();
         }
         return Result.error("原密码错误");
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xff = request.getHeader("X-Forwarded-For");
+        if (xff != null && !xff.isEmpty()) {
+            return xff.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 }
