@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/borrows")
@@ -27,42 +28,42 @@ public class BorrowController {
     }
 
     @GetMapping("/{id}")
-    public Result<Borrow> getById(@PathVariable Integer id) {
-        Borrow b = borrowService.getById(id);
-        if (b == null) return Result.error("借阅记录不存在");
-        return Result.success(b);
+    public Result<Borrow> getById(@PathVariable Integer id, HttpServletRequest request) {
+        var current = (User) request.getSession().getAttribute("currentUser");
+        if (current == null) return Result.error("未登录");
+        var borrow = borrowService.getById(id);
+        if (borrow == null) return Result.error("借阅记录不存在");
+        if ("READER".equals(current.getRole()) && !borrow.getReaderId().equals(current.getReaderId()))
+            return Result.error("无权查看他人借阅记录");
+        return Result.success(borrow);
     }
 
     @GetMapping("/my/{readerId}")
     public Result<List<Borrow>> myBorrows(@PathVariable Integer readerId, HttpServletRequest request) {
-        User current = (User) request.getSession().getAttribute("currentUser");
-        if (current == null) {
-            return Result.error("未登录");
-        }
-        if ("READER".equals(current.getRole()) && !readerId.equals(current.getReaderId())) {
+        var current = (User) request.getSession().getAttribute("currentUser");
+        if (current == null) return Result.error("未登录");
+        if ("READER".equals(current.getRole()) && !readerId.equals(current.getReaderId()))
             return Result.error("无权查看他人借阅记录");
-        }
         return Result.success(borrowService.list(null, readerId));
     }
 
     @PostMapping("/borrow")
     public Result<Void> borrow(@RequestBody BorrowAction action, HttpServletRequest request) {
         requireAdmin(request);
-        BorrowService.Result r = borrowService.borrow(action);
+        var r = borrowService.borrow(action);
         return r.isSuccess() ? Result.success() : Result.error(r.getMessage());
     }
 
     @PostMapping("/return/{id}")
     public Result<Void> returnBook(@PathVariable Integer id, HttpServletRequest request) {
         requireAdmin(request);
-        BorrowService.Result r = borrowService.returnBook(id);
+        var r = borrowService.returnBook(id);
         return r.isSuccess() ? Result.success() : Result.error(r.getMessage());
     }
 
     private void requireAdmin(HttpServletRequest request) {
-        User current = (User) request.getSession().getAttribute("currentUser");
-        if (current == null || !"ADMIN".equals(current.getRole())) {
-            throw new RuntimeException("权限不足");
-        }
+        Optional.ofNullable((User) request.getSession().getAttribute("currentUser"))
+                .filter(u -> "ADMIN".equals(u.getRole()))
+                .orElseThrow(() -> new RuntimeException("权限不足"));
     }
 }

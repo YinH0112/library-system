@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -24,9 +25,9 @@ public class CategoryController {
 
     @GetMapping("/{id}")
     public Result<Category> getById(@PathVariable Integer id) {
-        Category c = categoryService.getById(id);
-        if (c == null) return Result.error("分类不存在");
-        return Result.success(c);
+        return Optional.ofNullable(categoryService.getById(id))
+                .map(Result::success)
+                .orElseGet(() -> Result.error("分类不存在"));
     }
 
     @PostMapping
@@ -51,9 +52,8 @@ public class CategoryController {
     }
 
     private void requireAdmin(HttpServletRequest request) {
-        User current = (User) request.getSession().getAttribute("currentUser");
-        if (current == null || !"ADMIN".equals(current.getRole())) {
-            throw new RuntimeException("权限不足");
-        }
+        Optional.ofNullable((User) request.getSession().getAttribute("currentUser"))
+                .filter(u -> "ADMIN".equals(u.getRole()))
+                .orElseThrow(() -> new RuntimeException("权限不足"));
     }
 }

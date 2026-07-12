@@ -30,7 +30,7 @@ class BorrowServiceImplTest {
     @Test
     void borrow_rejectsWhenBookNotFound() {
         when(bookMapper.findById(1)).thenReturn(null);
-        BorrowAction action = new BorrowAction() {{ setBookId(1); setReaderId(1); }};
+        BorrowAction action = new BorrowAction(1, 1, null);
         assertFalse(borrowService.borrow(action).isSuccess());
         verify(borrowMapper, never()).insert(any());
     }
@@ -39,7 +39,7 @@ class BorrowServiceImplTest {
     void borrow_rejectsWhenStockZero() {
         Book b = new Book(); b.setId(1); b.setStock(0); b.setTotalStock(1); b.setName("X");
         when(bookMapper.findById(1)).thenReturn(b);
-        BorrowAction action = new BorrowAction() {{ setBookId(1); setReaderId(1); }};
+        BorrowAction action = new BorrowAction(1, 1, null);
         assertFalse(borrowService.borrow(action).isSuccess());
         verify(bookMapper, never()).decreaseStock(anyInt());
     }
@@ -52,7 +52,7 @@ class BorrowServiceImplTest {
         when(borrowMapper.countActiveByReader(1)).thenReturn(0);
         // reader lookup happens via readerMapper — but we don't have it here, so service uses borrowMapper.countActiveByReader only
         // Actually need a Reader check; see service below uses borrowMapper only. Adjust test:
-        BorrowAction action = new BorrowAction() {{ setBookId(1); setReaderId(1); }};
+        BorrowAction action = new BorrowAction(1, 1, null);
         // Service does NOT check reader status (no readerMapper), so this test should pass borrow.
         // We revise: this test confirms borrow proceeds when reader has 0 active borrows
         when(bookMapper.decreaseStock(1)).thenReturn(1);
@@ -65,7 +65,7 @@ class BorrowServiceImplTest {
         Book b = new Book(); b.setId(1); b.setStock(1); b.setTotalStock(1); b.setName("X");
         when(bookMapper.findById(1)).thenReturn(b);
         when(borrowMapper.countActiveByReader(1)).thenReturn(5);
-        BorrowAction action = new BorrowAction() {{ setBookId(1); setReaderId(1); }};
+        BorrowAction action = new BorrowAction(1, 1, null);
         assertFalse(borrowService.borrow(action).isSuccess());
         verify(bookMapper, never()).decreaseStock(anyInt());
     }
@@ -77,7 +77,7 @@ class BorrowServiceImplTest {
         when(borrowMapper.countActiveByReader(1)).thenReturn(1);
         when(bookMapper.decreaseStock(1)).thenReturn(1);
         when(borrowMapper.insert(any())).thenReturn(1);
-        BorrowAction action = new BorrowAction() {{ setBookId(1); setReaderId(1); setDays(15); }};
+        BorrowAction action = new BorrowAction(1, 1, 15);
         BorrowService.Result r = borrowService.borrow(action);
         assertTrue(r.isSuccess());
         verify(bookMapper).decreaseStock(1);

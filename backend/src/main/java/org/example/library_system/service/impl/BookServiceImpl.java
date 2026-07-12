@@ -25,7 +25,7 @@ public class BookServiceImpl implements BookService {
     public PageResult<Book> page(BookQuery query) {
         List<Book> records = bookMapper.findByQuery(query);
         long total = bookMapper.countByQuery(query);
-        return new PageResult<>(records, total, query.page(), query.size());
+        return new PageResult<>(records, total, query.getPage(), query.getSize());
     }
 
     @Override

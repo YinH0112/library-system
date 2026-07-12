@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/books")
@@ -31,9 +32,9 @@ public class BookController {
 
     @GetMapping("/{id}")
     public Result<Book> getById(@PathVariable Integer id) {
-        Book book = bookService.getById(id);
-        if (book == null) return Result.error("图书不存在");
-        return Result.success(book);
+        return Optional.ofNullable(bookService.getById(id))
+                .map(Result::success)
+                .orElseGet(() -> Result.error("图书不存在"));
     }
 
     @PostMapping
@@ -55,9 +56,8 @@ public class BookController {
     }
 
     private void requireAdmin(HttpServletRequest request) {
-        User current = (User) request.getSession().getAttribute("currentUser");
-        if (current == null || !"ADMIN".equals(current.getRole())) {
-            throw new RuntimeException("权限不足");
-        }
+        Optional.ofNullable((User) request.getSession().getAttribute("currentUser"))
+                .filter(u -> "ADMIN".equals(u.getRole()))
+                .orElseThrow(() -> new RuntimeException("权限不足"));
     }
 }

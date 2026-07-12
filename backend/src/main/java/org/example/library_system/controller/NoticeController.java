@@ -9,12 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
-/**
- * 公告通知控制器
- * - 所有登录用户: 查看已发布公告
- * - 管理员: CRUD + 置顶
- */
 @RestController
 @RequestMapping("/api/notices")
 public class NoticeController {
@@ -22,37 +18,34 @@ public class NoticeController {
     @Autowired
     private NoticeService noticeService;
 
-    /** 已发布公告列表(所有登录用户可访问) */
     @GetMapping("/published")
     public Result<List<Notice>> listPublished(@RequestParam(required = false) String type) {
         return Result.success(noticeService.listPublished(type));
     }
 
-    /** 置顶公告(借阅者首页轮播) */
     @GetMapping("/pinned")
     public Result<List<Notice>> pinned() {
-        List<Notice> all = noticeService.listPublished(null);
+        var all = noticeService.listPublished(null);
         return Result.success(all.stream().filter(n -> n.getPinned() != null && n.getPinned() == 1).toList());
     }
 
-    /** 管理员:所有公告(含草稿) */
     @GetMapping
     public Result<List<Notice>> listAll(@RequestParam(required = false) String type,
-                                       HttpServletRequest request) {
+                                        HttpServletRequest request) {
         requireAdmin(request);
         return Result.success(noticeService.listAll(type));
     }
 
     @GetMapping("/{id}")
     public Result<Notice> getById(@PathVariable Integer id) {
-        Notice n = noticeService.getById(id);
-        if (n == null) return Result.error("公告不存在");
-        return Result.success(n);
+        return Optional.ofNullable(noticeService.getById(id))
+                .map(Result::success)
+                .orElseGet(() -> Result.error("公告不存在"));
     }
 
     @PostMapping
     public Result<Void> create(@RequestBody Notice notice, HttpServletRequest request) {
-        User current = requireAdmin(request);
+        var current = requireAdmin(request);
         notice.setPublisherId(current.getId());
         return noticeService.save(notice) ? Result.success() : Result.error("标题和正文不能为空");
     }
@@ -78,10 +71,8 @@ public class NoticeController {
     }
 
     private User requireAdmin(HttpServletRequest request) {
-        User current = (User) request.getSession().getAttribute("currentUser");
-        if (current == null || !"ADMIN".equals(current.getRole())) {
-            throw new RuntimeException("权限不足");
-        }
-        return current;
+        return Optional.ofNullable((User) request.getSession().getAttribute("currentUser"))
+                .filter(u -> "ADMIN".equals(u.getRole()))
+                .orElseThrow(() -> new RuntimeException("权限不足"));
     }
 }

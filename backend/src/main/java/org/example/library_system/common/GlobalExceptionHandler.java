@@ -3,12 +3,14 @@ package org.example.library_system.common;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Optional;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public Result<Void> handleRuntimeException(RuntimeException e) {
-        String msg = e.getMessage();
+        var msg = e.getMessage();
         if (msg != null && msg.contains("权限不足")) {
             return new Result<>(403, msg, null);
         }

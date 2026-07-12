@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -21,18 +22,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public User login(AuthDTO authDTO) {
-        User user = userMapper.findByUsername(authDTO.username());
-        if (user == null) {
-            return null;
-        }
-        if ("DISABLED".equals(user.getStatus())) {
-            return null;
-        }
-        if (!passwordEncoder.matches(authDTO.password(), user.getPassword())) {
-            return null;
-        }
-        user.setPassword(null);
-        return user;
+        return Optional.ofNullable(userMapper.findByUsername(authDTO.username()))
+                .filter(u -> !"DISABLED".equals(u.getStatus()))
+                .filter(u -> passwordEncoder.matches(authDTO.password(), u.getPassword()))
+                .map(u -> { u.setPassword(null); return u; })
+                .orElse(null);
     }
 
     @Override
@@ -40,10 +34,10 @@ public class AuthServiceImpl implements AuthService {
         if (userMapper.findByUsername(authDTO.username()) != null) {
             return null;
         }
-        User user = new User();
+        var user = new User();
         user.setUsername(authDTO.username());
         user.setPassword(passwordEncoder.encode(authDTO.password()));
-        user.setRole(authDTO.role() != null ? authDTO.role() : "READER");
+        user.setRole(Optional.ofNullable(authDTO.role()).orElse("READER"));
         user.setReaderId(authDTO.readerId());
         user.setStatus("ACTIVE");
         userMapper.insert(user);
@@ -53,60 +47,48 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean changePassword(Integer userId, AuthDTO authDTO) {
-        User user = userMapper.findById(userId);
-        if (user == null) {
-            return false;
-        }
-        if (!passwordEncoder.matches(authDTO.oldPassword(), user.getPassword())) {
-            return false;
-        }
-        String encoded = passwordEncoder.encode(authDTO.newPassword());
-        return userMapper.updatePassword(userId, encoded) > 0;
+        return Optional.ofNullable(userMapper.findById(userId))
+                .filter(u -> passwordEncoder.matches(authDTO.oldPassword(), u.getPassword()))
+                .map(u -> userMapper.updatePassword(userId, passwordEncoder.encode(authDTO.newPassword())) > 0)
+                .orElse(false);
     }
 
     @Override
     public List<User> listUsers(String role) {
-        List<User> users = userMapper.findAll(role);
+        var users = userMapper.findAll(role);
         users.forEach(u -> u.setPassword(null));
         return users;
     }
 
     @Override
     public User getCurrentUser(Integer userId) {
-        User user = userMapper.findById(userId);
-        if (user != null) {
-            user.setPassword(null);
-        }
-        return user;
+        return Optional.ofNullable(userMapper.findById(userId))
+                .map(u -> { u.setPassword(null); return u; })
+                .orElse(null);
     }
 
     @Override
     public boolean toggleStatus(Integer userId) {
-        User user = userMapper.findById(userId);
-        if (user == null) return false;
-        String newStatus = "ACTIVE".equals(user.getStatus()) ? "DISABLED" : "ACTIVE";
-        return userMapper.updateStatus(userId, newStatus) > 0;
+        return Optional.ofNullable(userMapper.findById(userId))
+                .map(u -> {
+                    var newStatus = "ACTIVE".equals(u.getStatus()) ? "DISABLED" : "ACTIVE";
+                    return userMapper.updateStatus(userId, newStatus) > 0;
+                })
+                .orElse(false);
     }
 
     @Override
     public boolean removeUser(Integer userId) {
-        User user = userMapper.findById(userId);
-        if (user == null) return false;
-        if ("ADMIN".equals(user.getRole())) {
-            List<User> admins = userMapper.findAll("ADMIN");
-            if (admins.size() <= 1) {
-                return false;
-            }
-        }
-        return userMapper.deleteById(userId) > 0;
+        return Optional.ofNullable(userMapper.findById(userId))
+                .filter(u -> !"ADMIN".equals(u.getRole()) || userMapper.findAll("ADMIN").size() > 1)
+                .map(u -> userMapper.deleteById(userId) > 0)
+                .orElse(false);
     }
 
     @Override
     public User getById(Integer id) {
-        User user = userMapper.findById(id);
-        if (user != null) {
-            user.setPassword(null);
-        }
-        return user;
+        return Optional.ofNullable(userMapper.findById(id))
+                .map(u -> { u.setPassword(null); return u; })
+                .orElse(null);
     }
 }

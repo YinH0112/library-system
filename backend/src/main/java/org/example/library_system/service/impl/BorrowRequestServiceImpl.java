@@ -36,14 +36,12 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
         if (request.getBookId() == null || request.getReaderId() == null) {
             return new Result(false, "图书或读者为空", null);
         }
-        Book book = bookMapper.findById(request.getBookId());
+        var book = bookMapper.findById(request.getBookId());
         if (book == null) {
             return new Result(false, "图书不存在", null);
         }
-        if (book.getStock() != null && book.getStock() <= 0) {
-        }
-        List<BorrowRequest> existing = requestMapper.findAll("PENDING", request.getReaderId());
-        for (BorrowRequest er : existing) {
+        var existing = requestMapper.findAll("PENDING", request.getReaderId());
+        for (var er : existing) {
             if (er.getBookId().equals(request.getBookId())) {
                 return new Result(false, "该书已有待审批申请,请勿重复申请", null);
             }
@@ -57,7 +55,7 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
         if (request.getDueDays() > MAX_DUE_DAYS) {
             return new Result(false, "借阅天数不能超过 " + MAX_DUE_DAYS + " 天", null);
         }
-        int active = borrowMapper.countActiveByReader(request.getReaderId());
+        var active = borrowMapper.countActiveByReader(request.getReaderId());
         if (active + existing.size() >= 5) {
             return new Result(false, "借阅总数达上限(5 本,含申请中)", null);
         }
@@ -71,27 +69,27 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
     @Override
     @Transactional
     public Result approve(Integer requestId, Integer adminId, String adminRemark) {
-        BorrowRequest req = requestMapper.findById(requestId);
+        var req = requestMapper.findById(requestId);
         if (req == null) {
             return new Result(false, "申请不存在", null);
         }
         if (!"PENDING".equals(req.getStatus())) {
             return new Result(false, "该申请已处理", null);
         }
-        Book book = bookMapper.findById(req.getBookId());
+        var book = bookMapper.findById(req.getBookId());
         if (book == null || book.getStock() == null || book.getStock() <= 0) {
             requestMapper.updateApprove(requestId, "REJECTED", LocalDate.now(), adminId,
                     "库存不足,自动拒绝:" + (adminRemark == null ? "" : adminRemark), null);
             return new Result(false, "库存不足,已自动拒绝该申请", null);
         }
-        int dueDays = req.getDueDays() != null ? req.getDueDays() : DEFAULT_DUE_DAYS;
-        BorrowAction action = new BorrowAction(req.getBookId(), req.getReaderId(), dueDays);
-        BorrowService.Result br = borrowService.borrow(action);
+        var dueDays = req.getDueDays() != null ? req.getDueDays() : DEFAULT_DUE_DAYS;
+        var action = new BorrowAction(req.getBookId(), req.getReaderId(), dueDays);
+        var br = borrowService.borrow(action);
         if (!br.isSuccess()) {
             return new Result(false, "借出失败:" + br.getMessage(), null);
         }
         var list = borrowMapper.findAll("BORROWED", req.getReaderId());
-        Integer newBorrowId = list.isEmpty() ? null : list.get(0).getId();
+        var newBorrowId = list.isEmpty() ? null : list.get(0).getId();
 
         requestMapper.updateApprove(requestId, "APPROVED", LocalDate.now(), adminId,
                 adminRemark, newBorrowId);
@@ -100,7 +98,7 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
 
     @Override
     public Result reject(Integer requestId, Integer adminId, String adminRemark) {
-        BorrowRequest req = requestMapper.findById(requestId);
+        var req = requestMapper.findById(requestId);
         if (req == null) {
             return new Result(false, "申请不存在", null);
         }
@@ -114,7 +112,7 @@ public class BorrowRequestServiceImpl implements BorrowRequestService {
 
     @Override
     public Result cancel(Integer requestId, Integer readerId) {
-        BorrowRequest req = requestMapper.findById(requestId);
+        var req = requestMapper.findById(requestId);
         if (req == null) {
             return new Result(false, "申请不存在", null);
         }

@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -33,7 +34,7 @@ public class UserController {
     @PostMapping
     public Result<Void> add(@RequestBody AuthDTO authDTO, HttpServletRequest request) {
         requireAdmin(request);
-        User user = authService.register(authDTO);
+        var user = authService.register(authDTO);
         return user != null ? Result.success() : Result.error("用户名已存在");
     }
 
@@ -46,7 +47,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     public Result<Void> remove(@PathVariable Integer id, HttpServletRequest request) {
         requireAdmin(request);
-        User current = (User) request.getSession().getAttribute("currentUser");
+        var current = (User) request.getSession().getAttribute("currentUser");
         if (current != null && current.getId().equals(id)) {
             return Result.error("不能删除当前登录账号");
         }
@@ -54,9 +55,8 @@ public class UserController {
     }
 
     private void requireAdmin(HttpServletRequest request) {
-        User current = (User) request.getSession().getAttribute("currentUser");
-        if (current == null || !"ADMIN".equals(current.getRole())) {
-            throw new RuntimeException("权限不足");
-        }
+        Optional.ofNullable((User) request.getSession().getAttribute("currentUser"))
+                .filter(u -> "ADMIN".equals(u.getRole()))
+                .orElseThrow(() -> new RuntimeException("权限不足"));
     }
 }

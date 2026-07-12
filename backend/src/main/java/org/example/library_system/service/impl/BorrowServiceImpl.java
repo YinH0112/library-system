@@ -29,27 +29,27 @@ public class BorrowServiceImpl implements BorrowService {
     @Override
     @Transactional
     public Result borrow(BorrowAction action) {
-        Book book = bookMapper.findById(action.bookId());
+        var book = bookMapper.findById(action.bookId());
         if (book == null) {
             return new Result(false, "图书不存在", null);
         }
         if (book.getStock() == null || book.getStock() <= 0) {
             return new Result(false, "库存不足,无法借出", null);
         }
-        int active = borrowMapper.countActiveByReader(action.readerId());
+        var active = borrowMapper.countActiveByReader(action.readerId());
         if (active >= MAX_ACTIVE_BORROWS) {
             return new Result(false, "已达借阅上限(" + MAX_ACTIVE_BORROWS + " 本)", null);
         }
 
-        int affected = bookMapper.decreaseStock(action.bookId());
+        var affected = bookMapper.decreaseStock(action.bookId());
         if (affected == 0) {
             return new Result(false, "库存竞争失败,请重试", null);
         }
 
-        LocalDate today = LocalDate.now();
-        LocalDate due = action.computeDueDate(today);
+        var today = LocalDate.now();
+        var due = action.computeDueDate(today);
 
-        Borrow record = new Borrow();
+        var record = new Borrow();
         record.setBookId(action.bookId());
         record.setReaderId(action.readerId());
         record.setBorrowDate(today);
@@ -64,7 +64,7 @@ public class BorrowServiceImpl implements BorrowService {
     @Override
     @Transactional
     public Result returnBook(Integer borrowId) {
-        Borrow borrow = borrowMapper.findById(borrowId);
+        var borrow = borrowMapper.findById(borrowId);
         if (borrow == null) {
             return new Result(false, "借阅记录不存在", null);
         }
@@ -72,12 +72,12 @@ public class BorrowServiceImpl implements BorrowService {
             return new Result(false, "该书已归还", null);
         }
 
-        LocalDate today = LocalDate.now();
-        BigDecimal fine = BigDecimal.ZERO;
-        String newStatus = "RETURNED";
+        var today = LocalDate.now();
+        var fine = BigDecimal.ZERO;
+        var newStatus = "RETURNED";
 
         if (borrow.getDueDate() != null && today.isAfter(borrow.getDueDate())) {
-            long days = ChronoUnit.DAYS.between(borrow.getDueDate(), today);
+            var days = ChronoUnit.DAYS.between(borrow.getDueDate(), today);
             fine = FINE_PER_DAY.multiply(BigDecimal.valueOf(days));
             newStatus = "RETURNED";
         }
@@ -85,7 +85,7 @@ public class BorrowServiceImpl implements BorrowService {
         borrowMapper.updateReturn(borrowId, today, newStatus, fine);
         bookMapper.increaseStock(borrow.getBookId());
 
-        String msg = fine.compareTo(BigDecimal.ZERO) > 0
+        var msg = fine.compareTo(BigDecimal.ZERO) > 0
                 ? "归还成功,逾期 " + fine + " 元"
                 : "归还成功";
         return new Result(true, msg, fine);

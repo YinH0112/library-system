@@ -14,18 +14,37 @@ public class LoginRateLimiter {
 
     private final ConcurrentHashMap<String, Deque<Long>> store = new ConcurrentHashMap<>();
 
-    public boolean allow(String key) {
-        long now = System.currentTimeMillis();
-        Deque<Long> deque = store.computeIfAbsent(key, k -> new ConcurrentLinkedDeque<>());
+    public boolean isBlocked(String key) {
+        var now = System.currentTimeMillis();
+        var deque = store.get(key);
+        if (deque == null) return false;
         synchronized (deque) {
             while (!deque.isEmpty() && now - deque.peekFirst() > WINDOW_MS) {
                 deque.pollFirst();
             }
-            if (deque.size() >= MAX_ATTEMPTS) {
-                return false;
-            }
-            deque.addLast(now);
-            return true;
+            return deque.size() >= MAX_ATTEMPTS;
         }
+    }
+
+    public void recordFailure(String key) {
+        var now = System.currentTimeMillis();
+        var deque = store.computeIfAbsent(key, k -> new ConcurrentLinkedDeque<>());
+        synchronized (deque) {
+            deque.addLast(now);
+            if (deque.size() > MAX_ATTEMPTS) {
+                deque.pollFirst();
+            }
+        }
+        if (store.size() > 10_000) {
+            store.entrySet().removeIf(e -> {
+                synchronized (e.getValue()) {
+                    return e.getValue().isEmpty();
+                }
+            });
+        }
+    }
+
+    public void reset(String key) {
+        store.remove(key);
     }
 }
