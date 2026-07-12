@@ -2,8 +2,7 @@
 import { ref, reactive, computed, onMounted, inject } from 'vue'
 import { BorrowRequestAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 const confirmFn = inject('confirmFn')
 
 const list = ref([])
@@ -15,8 +14,8 @@ async function load() {
   try {
     const res = await BorrowRequestAPI.my(statusFilter.value || null)
     if (res.data.code === 200) list.value = res.data.data || []
-    else emit('toast', 'error', '加载失败')
-  } catch (e) { emit('toast', 'error', '加载失败') }
+    else showToast('error', '加载失败')
+  } catch (e) { showToast('error', '加载失败') }
   finally { loading.value = false }
 }
 
@@ -25,9 +24,9 @@ async function cancel(r) {
   if (!ok) return
   const res = await BorrowRequestAPI.cancel(r.id)
   if (res.data.code === 200) {
-    emit('toast', 'success', '已取消')
+    showToast('success', '已取消')
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 function statusBadge(s) {

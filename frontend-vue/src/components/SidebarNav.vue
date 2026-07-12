@@ -1,33 +1,33 @@
 <script setup>
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
 import { authStore } from '../store/auth.js'
 import Avatar from './Avatar.vue'
 
-defineProps({
+const props = defineProps({
   current: { type: String, required: true }
 })
-const emit = defineEmits(['navigate'])
 
 const adminItems = [
-  { key: 'dashboard', label: 'Dashboard', num: '01', section: '主控台' },
-  { key: 'books', label: 'Books', num: '02', section: '主控台' },
-  { key: 'categories', label: 'Categories', num: '03', section: '主控台' },
-  { key: 'readers', label: 'Readers', num: '04', section: '运营' },
-  { key: 'borrows', label: 'Borrows', num: '05', section: '运营' },
-  { key: 'requests', label: 'Requests', num: '06', section: '运营' },
-  { key: 'notices', label: 'Notices', num: '07', section: '运营' },
-  { key: 'users', label: 'Users', num: '08', section: '运营' },
-  { key: 'profile', label: 'Profile', num: '09', section: '账户' }
+  { path: '/admin/dashboard', label: 'Dashboard', num: '01', section: '主控台' },
+  { path: '/admin/books', label: 'Books', num: '02', section: '主控台' },
+  { path: '/admin/categories', label: 'Categories', num: '03', section: '主控台' },
+  { path: '/admin/readers', label: 'Readers', num: '04', section: '运营' },
+  { path: '/admin/borrows', label: 'Borrows', num: '05', section: '运营' },
+  { path: '/admin/requests', label: 'Requests', num: '06', section: '运营' },
+  { path: '/admin/notices', label: 'Notices', num: '07', section: '运营' },
+  { path: '/admin/users', label: 'Users', num: '08', section: '运营' },
+  { path: '/admin/profile', label: 'Profile', num: '09', section: '账户' }
 ]
 
 const readerItems = [
-  { key: 'reader-dashboard', label: 'My Dashboard', num: '01', section: '我的' },
-  { key: 'notice-board', label: 'Notice Board', num: '02', section: '我的' },
-  { key: 'reader-books', label: 'Browse', num: '03', section: '我的' },
-  { key: 'my-requests', label: 'My Requests', num: '04', section: '我的' },
-  { key: 'my-borrows', label: 'My Borrows', num: '05', section: '我的' },
-  { key: 'my-reviews', label: 'My Reviews', num: '06', section: '我的' },
-  { key: 'profile', label: 'Profile', num: '07', section: '账户' }
+  { path: '/reader/dashboard', label: 'My Dashboard', num: '01', section: '我的' },
+  { path: '/reader/notices', label: 'Notice Board', num: '02', section: '我的' },
+  { path: '/reader/books', label: 'Browse', num: '03', section: '我的' },
+  { path: '/reader/requests', label: 'My Requests', num: '04', section: '我的' },
+  { path: '/reader/borrows', label: 'My Borrows', num: '05', section: '我的' },
+  { path: '/reader/reviews', label: 'My Reviews', num: '06', section: '我的' },
+  { path: '/reader/profile', label: 'Profile', num: '07', section: '账户' }
 ]
 
 const navItems = computed(() => authStore.isAdmin() ? adminItems : readerItems)
@@ -56,14 +56,15 @@ const sections = computed(() => {
 
     <nav v-for="section in sections" :key="section" class="nav-section">
       <div class="nav-section-title">// {{ section }}</div>
-      <div
+      <RouterLink
         v-for="item in navItems.filter(i => i.section === section)"
-        :key="item.key"
-        :class="['nav-item', { active: current === item.key }]"
-        @click="emit('navigate', item.key)">
+        :key="item.path"
+        :to="item.path"
+        :class="['nav-item', { active: current === item.path }]"
+      >
         <span class="nav-num">{{ item.num }}</span>
         <span>{{ item.label }}</span>
-      </div>
+      </RouterLink>
     </nav>
   </aside>
 </template>
@@ -89,5 +90,10 @@ const sections = computed(() => {
   font-family: var(--font-sans);
   font-size: 11px;
   color: var(--muted);
+}
+
+a.nav-item {
+  text-decoration: none;
+  color: inherit;
 }
 </style>

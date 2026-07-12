@@ -3,8 +3,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { AuthAPI, ReaderAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
 import Avatar from '../components/Avatar.vue'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 
 const tab = ref('info')
 const readerInfo = ref(null)
@@ -22,11 +21,11 @@ async function loadReader() {
 
 async function changePassword() {
   if (!pwdForm.oldPassword || !pwdForm.newPassword) {
-    emit('toast', 'error', '请填写完整')
+    showToast('error', '请填写完整')
     return
   }
   if (pwdForm.newPassword !== pwdForm.confirmPassword) {
-    emit('toast', 'error', '两次新密码不一致')
+    showToast('error', '两次新密码不一致')
     return
   }
   changingPwd.value = true
@@ -36,12 +35,12 @@ async function changePassword() {
       newPassword: pwdForm.newPassword
     })
     if (res.data.code === 200) {
-      emit('toast', 'success', '密码修改成功')
+      showToast('success', '密码修改成功')
       pwdForm.oldPassword = ''
       pwdForm.newPassword = ''
       pwdForm.confirmPassword = ''
-    } else emit('toast', 'error', res.data.message || '修改失败')
-  } catch (e) { emit('toast', 'error', '网络错误') }
+    } else showToast('error', res.data.message || '修改失败')
+  } catch (e) { showToast('error', '网络错误') }
   finally { changingPwd.value = false }
 }
 

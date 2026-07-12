@@ -2,6 +2,7 @@
 node_modules/
 frontend-react/node_modules/
 frontend-react/dist/
+frontend-vue/dist/
 
 # 构建产物
 backend/target/

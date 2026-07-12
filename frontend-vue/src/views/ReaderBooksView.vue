@@ -4,8 +4,7 @@ import { BookAPI, CategoryAPI, BorrowRequestAPI, ReviewAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
 import SkeletonLoader from '../components/SkeletonLoader.vue'
 import EmptyState from '../components/EmptyState.vue'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 
 const books = ref([])
 const categories = ref([])
@@ -45,7 +44,7 @@ async function load() {
       books.value = pr.records || []
       total.value = pr.total || 0
     }
-  } catch (e) { emit('toast', 'error', '加载失败') }
+  } catch (e) { showToast('error', '加载失败') }
   finally { loading.value = false }
 }
 
@@ -81,9 +80,9 @@ async function submitApply() {
     readerRemark: applyForm.readerRemark
   })
   if (res.data.code === 200) {
-    emit('toast', 'success', '申请已提交,等待管理员审批')
+    showToast('success', '申请已提交,等待管理员审批')
     applyDialog.value = false
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 // === 评价 ===
@@ -107,7 +106,7 @@ async function openReviewDialog(b) {
 async function submitReview() {
   if (!reviewTarget.value) return
   if (reviewForm.rating < 1 || reviewForm.rating > 5) {
-    emit('toast', 'error', '评分须为 1-5')
+    showToast('error', '评分须为 1-5')
     return
   }
   const res = await ReviewAPI.submit({
@@ -116,9 +115,9 @@ async function submitReview() {
     content: reviewForm.content
   })
   if (res.data.code === 200) {
-    emit('toast', 'success', myExistingReview.value ? '评价已更新' : '评价已提交')
+    showToast('success', myExistingReview.value ? '评价已更新' : '评价已提交')
     reviewDialog.value = false
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 // === 查看评价 ===

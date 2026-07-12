@@ -2,8 +2,7 @@
 import { ref, reactive, onMounted, inject } from 'vue'
 import { UserAPI, ReaderAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 const confirmFn = inject('confirmFn')
 
 const list = ref([])
@@ -15,7 +14,7 @@ const form = reactive({ username: '', password: '', role: 'READER', readerId: nu
 async function load() {
   const res = await UserAPI.list(roleFilter.value || null)
   if (res.data.code === 200) list.value = res.data.data || []
-  else emit('toast', 'error', res.data.message)
+  else showToast('error', res.data.message)
 }
 
 async function loadReaders() {
@@ -33,35 +32,35 @@ function openAdd() {
 
 async function submit() {
   if (!form.username || !form.password) {
-    emit('toast', 'error', '用户名和密码必填')
+    showToast('error', '用户名和密码必填')
     return
   }
   const res = await UserAPI.add({ ...form })
   if (res.data.code === 200) {
-    emit('toast', 'success', '用户创建成功')
+    showToast('success', '用户创建成功')
     dialogVisible.value = false
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 async function toggleStatus(u) {
   const res = await UserAPI.toggleStatus(u.id)
   if (res.data.code === 200) {
-    emit('toast', 'success', '状态已切换')
+    showToast('success', '状态已切换')
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 async function remove(u) {
   if (authStore.state.user && authStore.state.user.id === u.id) {
-    emit('toast', 'error', '不能删除当前登录账号')
+    showToast('error', '不能删除当前登录账号')
     return
   }
   const ok = await confirmFn('删除用户', `确定删除用户 ${u.username}?`)
   if (!ok) return
   const res = await UserAPI.remove(u.id)
-  if (res.data.code === 200) { emit('toast', 'warning', '已删除'); await load() }
-  else emit('toast', 'error', res.data.message)
+  if (res.data.code === 200) { showToast('warning', '已删除'); await load() }
+  else showToast('error', res.data.message)
 }
 
 function statusBadge(s) {

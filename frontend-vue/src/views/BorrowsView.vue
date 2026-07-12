@@ -1,8 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, inject } from 'vue'
 import { BorrowAPI, BookAPI, ReaderAPI } from '../api.js'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 const confirmFn = inject('confirmFn')
 
 const list = ref([])
@@ -15,7 +14,7 @@ const action = reactive({ bookId: null, readerId: null, days: 30 })
 async function load() {
   const res = await BorrowAPI.list(statusFilter.value || null, null)
   if (res.data.code === 200) list.value = res.data.data || []
-  else emit('toast', 'error', '加载失败')
+  else showToast('error', '加载失败')
 }
 
 async function openBorrowDialog() {
@@ -30,15 +29,15 @@ async function openBorrowDialog() {
 
 async function submitBorrow() {
   if (!action.bookId || !action.readerId) {
-    emit('toast', 'error', '请选择图书和读者')
+    showToast('error', '请选择图书和读者')
     return
   }
   const res = await BorrowAPI.borrow({ ...action })
   if (res.data.code === 200) {
-    emit('toast', 'success', '借出成功')
+    showToast('success', '借出成功')
     borrowDialogVisible.value = false
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 async function returnBook(b) {
@@ -46,9 +45,9 @@ async function returnBook(b) {
   if (!ok) return
   const res = await BorrowAPI.returnBook(b.id)
   if (res.data.code === 200) {
-    emit('toast', 'success', '归还成功')
+    showToast('success', '归还成功')
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 function statusBadge(s) {

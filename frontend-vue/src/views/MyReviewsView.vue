@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue'
 import { ReviewAPI } from '../api.js'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 const confirmFn = inject('confirmFn')
 
 const list = ref([])
@@ -13,8 +12,8 @@ async function load() {
   try {
     const res = await ReviewAPI.my()
     if (res.data.code === 200) list.value = res.data.data || []
-    else emit('toast', 'error', '加载失败')
-  } catch (e) { emit('toast', 'error', '加载失败') }
+    else showToast('error', '加载失败')
+  } catch (e) { showToast('error', '加载失败') }
   finally { loading.value = false }
 }
 
@@ -23,9 +22,9 @@ async function remove(rv) {
   if (!ok) return
   const res = await ReviewAPI.remove(rv.id)
   if (res.data.code === 200) {
-    emit('toast', 'success', '已删除')
+    showToast('success', '已删除')
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 function stars(n) {

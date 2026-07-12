@@ -3,8 +3,7 @@ import { ref, onMounted } from 'vue'
 import { StatsAPI, BorrowAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
 import SkeletonLoader from '../components/SkeletonLoader.vue'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 
 const overview = ref({})
 const myBorrows = ref([])
@@ -22,7 +21,7 @@ async function loadAll() {
     overview.value = ov.data.data || {}
     myBorrows.value = (br.data.data || []).slice(0, 5)
   } catch (e) {
-    emit('toast', 'error', '数据加载失败')
+    showToast('error', '数据加载失败')
   } finally {
     loading.value = false
   }

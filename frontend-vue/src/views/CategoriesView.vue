@@ -1,8 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, inject } from 'vue'
 import { CategoryAPI } from '../api.js'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 const confirmFn = inject('confirmFn')
 
 const list = ref([])
@@ -16,7 +15,7 @@ async function load() {
   try {
     const res = await CategoryAPI.list()
     if (res.data.code === 200) list.value = res.data.data || []
-  } catch (e) { emit('toast', 'error', '加载失败') }
+  } catch (e) { showToast('error', '加载失败') }
   finally { loading.value = false }
 }
 
@@ -37,17 +36,17 @@ function openEdit(c) {
 }
 
 async function submit() {
-  if (!form.name.trim()) { emit('toast', 'error', '名称不能为空'); return }
+  if (!form.name.trim()) { showToast('error', '名称不能为空'); return }
   try {
     const res = isEdit.value
       ? await CategoryAPI.update({ ...form })
       : await CategoryAPI.add({ name: form.name.trim(), description: form.description.trim() })
     if (res.data.code === 200) {
-      emit('toast', 'success', isEdit.value ? '修订完成' : '新增完成')
+      showToast('success', isEdit.value ? '修订完成' : '新增完成')
       dialogVisible.value = false
       await load()
-    } else emit('toast', 'error', res.data.message)
-  } catch (e) { emit('toast', 'error', '网络错误') }
+    } else showToast('error', res.data.message)
+  } catch (e) { showToast('error', '网络错误') }
 }
 
 async function remove(c) {
@@ -55,9 +54,9 @@ async function remove(c) {
   if (!ok) return
   const res = await CategoryAPI.remove(c.id)
   if (res.data.code === 200) {
-    emit('toast', 'warning', '已删除')
+    showToast('warning', '已删除')
     await load()
-  } else emit('toast', 'error', res.data.message || '删除失败(可能仍有图书引用)')
+  } else showToast('error', res.data.message || '删除失败(可能仍有图书引用)')
 }
 
 onMounted(load)

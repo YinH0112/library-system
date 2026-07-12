@@ -3,8 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { StatsAPI } from '../api.js'
 import SkeletonLoader from '../components/SkeletonLoader.vue'
 import EmptyState from '../components/EmptyState.vue'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 
 const overview = ref({})
 const categoryData = ref([])
@@ -56,7 +55,7 @@ async function loadAll() {
     recentList.value = recent.data.data || []
   } catch (e) {
     loadError.value = true
-    emit('toast', 'error', '仪表盘数据加载失败')
+    showToast('error', '仪表盘数据加载失败')
     console.error(e)
   } finally {
     loading.value = false

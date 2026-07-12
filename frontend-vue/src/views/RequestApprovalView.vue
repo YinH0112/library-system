@@ -3,8 +3,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { BorrowRequestAPI } from '../api.js'
 import SkeletonLoader from '../components/SkeletonLoader.vue'
 import EmptyState from '../components/EmptyState.vue'
-
-const emit = defineEmits(['toast', 'confirm'])
+import { showToast } from '../composables/useToast.js'
 
 const list = ref([])
 const statusFilter = ref('PENDING')
@@ -22,8 +21,8 @@ async function load() {
   try {
     const res = await BorrowRequestAPI.list(statusFilter.value || null)
     if (res.data.code === 200) list.value = res.data.data || []
-    else emit('toast', 'error', '加载失败')
-  } catch (e) { emit('toast', 'error', '加载失败') }
+    else showToast('error', '加载失败')
+  } catch (e) { showToast('error', '加载失败') }
   finally { loading.value = false }
   await loadPendingCount()
 }
@@ -49,10 +48,10 @@ async function submitAction() {
   const api = actionMode.value === 'approve' ? BorrowRequestAPI.approve : BorrowRequestAPI.reject
   const res = await api(id, remark)
   if (res.data.code === 200) {
-    emit('toast', 'success', actionMode.value === 'approve' ? '已批准,图书已借出' : '已拒绝')
+    showToast('success', actionMode.value === 'approve' ? '已批准,图书已借出' : '已拒绝')
     actionDialog.value = false
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 function statusBadge(s) {

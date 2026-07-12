@@ -1,12 +1,14 @@
 <script setup>
 import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { AuthAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
+import { showToast } from '../composables/useToast.js'
 import PasswordToggle from '../components/PasswordToggle.vue'
 
-const emit = defineEmits(['logged-in', 'toast'])
+const router = useRouter()
 
-const mode = ref('login') // login / register
+const mode = ref('login')
 const loading = ref(false)
 const form = reactive({
   username: '',
@@ -17,12 +19,12 @@ const form = reactive({
 
 async function submit() {
   if (!form.username || !form.password) {
-    emit('toast', 'error', '用户名和密码不能为空')
+    showToast('error', '用户名和密码不能为空')
     return
   }
   if (mode.value === 'register') {
     if (form.password !== form.confirmPassword) {
-      emit('toast', 'error', '两次密码不一致')
+      showToast('error', '两次密码不一致')
       return
     }
   }
@@ -32,13 +34,12 @@ async function submit() {
       const res = await AuthAPI.login({ username: form.username, password: form.password })
       if (res.data.code === 200) {
         authStore.setUser(res.data.data)
-        emit('toast', 'success', '欢迎回来,' + res.data.data.username)
-        emit('logged-in')
+        showToast('success', '欢迎回来,' + res.data.data.username)
+        router.push(res.data.data.role === 'ADMIN' ? '/admin/dashboard' : '/reader/dashboard')
       } else {
-        emit('toast', 'error', res.data.message || '登录失败')
+        showToast('error', res.data.message || '登录失败')
       }
     } else {
-      // 注册为借阅者(需先有读者档案,readerId 可选)
       const payload = {
         username: form.username,
         password: form.password,
@@ -47,16 +48,16 @@ async function submit() {
       }
       const res = await AuthAPI.register(payload)
       if (res.data.code === 200) {
-        emit('toast', 'success', '注册成功,请登录')
+        showToast('success', '注册成功,请登录')
         mode.value = 'login'
         form.password = ''
         form.confirmPassword = ''
       } else {
-        emit('toast', 'error', res.data.message || '注册失败')
+        showToast('error', res.data.message || '注册失败')
       }
     }
   } catch (e) {
-    emit('toast', 'error', '网络错误')
+    showToast('error', '网络错误')
   } finally {
     loading.value = false
   }
@@ -72,7 +73,6 @@ function switchMode() {
 <template>
   <div class="login-page">
     <div class="login-card">
-      <!-- 左侧装饰板 -->
       <div class="login-left">
         <div class="brand-block">
           <div class="brand-mark">Bibliotheca</div>
@@ -89,7 +89,6 @@ function switchMode() {
         </div>
       </div>
 
-      <!-- 右侧表单 -->
       <div class="login-right">
         <div class="form-header">
           <span class="header-label">{{ mode === 'login' ? '登入' : '注册' }}</span>
@@ -162,7 +161,6 @@ function switchMode() {
   overflow: hidden;
 }
 
-/* Subtle background pattern */
 .login-page::before {
   content: '';
   position: absolute;
@@ -186,7 +184,6 @@ function switchMode() {
   animation: fadeSlideUp 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Left panel — dark dramatic */
 .login-left {
   background: linear-gradient(160deg, #1a1917 0%, #2c2a26 50%, #1f1d1a 100%);
   color: var(--bg);
@@ -294,7 +291,6 @@ function switchMode() {
   box-shadow: 0 0 6px rgba(140,160,111,0.5);
 }
 
-/* Right form panel */
 .login-right {
   padding: 48px 44px;
   display: flex;

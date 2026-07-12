@@ -2,8 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { BorrowAPI } from '../api.js'
 import { authStore } from '../store/auth.js'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 
 const list = ref([])
 const statusFilter = ref('')
@@ -20,7 +19,7 @@ async function load() {
       all = all.filter(b => b.status === statusFilter.value)
     }
     list.value = all
-  } catch (e) { emit('toast', 'error', '加载失败') }
+  } catch (e) { showToast('error', '加载失败') }
   finally { loading.value = false }
 }
 

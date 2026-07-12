@@ -3,8 +3,7 @@ import { ref, reactive, onMounted, inject } from 'vue'
 import { NoticeAPI } from '../api.js'
 import SkeletonLoader from '../components/SkeletonLoader.vue'
 import EmptyState from '../components/EmptyState.vue'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 const confirmFn = inject('confirmFn')
 
 const list = ref([])
@@ -20,8 +19,8 @@ async function load() {
   try {
     const res = await NoticeAPI.list(typeFilter.value || null)
     if (res.data.code === 200) list.value = res.data.data || []
-    else emit('toast', 'error', '加载失败')
-  } catch (e) { emit('toast', 'error', '加载失败') }
+    else showToast('error', '加载失败')
+  } catch (e) { showToast('error', '加载失败') }
   finally { loading.value = false }
 }
 
@@ -41,25 +40,25 @@ function openEdit(n) {
 
 async function submit() {
   if (!form.title.trim() || !form.content.trim()) {
-    emit('toast', 'error', '标题和正文不能为空')
+    showToast('error', '标题和正文不能为空')
     return
   }
   const res = editing.value
     ? await NoticeAPI.update({ ...form })
     : await NoticeAPI.add({ ...form })
   if (res.data.code === 200) {
-    emit('toast', 'success', editing.value ? '已更新' : '已发布')
+    showToast('success', editing.value ? '已更新' : '已发布')
     dialogVisible.value = false
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 async function togglePin(n) {
   const res = await NoticeAPI.togglePinned(n.id, !n.pinned)
   if (res.data.code === 200) {
-    emit('toast', 'success', n.pinned ? '已取消置顶' : '已置顶')
+    showToast('success', n.pinned ? '已取消置顶' : '已置顶')
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 async function remove(n) {
@@ -67,9 +66,9 @@ async function remove(n) {
   if (!ok) return
   const res = await NoticeAPI.remove(n.id)
   if (res.data.code === 200) {
-    emit('toast', 'success', '已删除')
+    showToast('success', '已删除')
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 function typeBadge(t) {

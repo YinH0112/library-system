@@ -1,8 +1,7 @@
 <script setup>
 import { ref, reactive, onMounted, inject } from 'vue'
 import { ReaderAPI } from '../api.js'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 const confirmFn = inject('confirmFn')
 
 const list = ref([])
@@ -16,7 +15,7 @@ const form = reactive({
 async function load() {
   const res = await ReaderAPI.list(keyword.value)
   if (res.data.code === 200) list.value = res.data.data || []
-  else emit('toast', 'error', '加载失败')
+  else showToast('error', '加载失败')
 }
 
 function openAdd() {
@@ -32,22 +31,22 @@ function openEdit(r) {
 }
 
 async function submit() {
-  if (!form.name.trim()) { emit('toast', 'error', '姓名不能为空'); return }
+  if (!form.name.trim()) { showToast('error', '姓名不能为空'); return }
   const payload = { ...form, name: form.name.trim() }
   const res = isEdit.value ? await ReaderAPI.update(payload) : await ReaderAPI.add(payload)
   if (res.data.code === 200) {
-    emit('toast', 'success', isEdit.value ? '修订完成' : '注册成功')
+    showToast('success', isEdit.value ? '修订完成' : '注册成功')
     dialogVisible.value = false
     await load()
-  } else emit('toast', 'error', res.data.message)
+  } else showToast('error', res.data.message)
 }
 
 async function remove(r) {
   const ok = await confirmFn('删除读者', `确定删除读者《${r.name}》?`)
   if (!ok) return
   const res = await ReaderAPI.remove(r.id)
-  if (res.data.code === 200) { emit('toast', 'warning', '已删除'); await load() }
-  else emit('toast', 'error', res.data.message || '删除失败(可能仍有未还图书)')
+  if (res.data.code === 200) { showToast('warning', '已删除'); await load() }
+  else showToast('error', res.data.message || '删除失败(可能仍有未还图书)')
 }
 
 function statusBadge(s) {

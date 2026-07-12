@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { NoticeAPI } from '../api.js'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 
 const list = ref([])
 const pinned = ref([])
@@ -25,7 +24,7 @@ async function load() {
     ])
     if (listRes.data.code === 200) list.value = listRes.data.data || []
     if (pinRes.data.code === 200) pinned.value = pinRes.data.data || []
-  } catch (e) { emit('toast', 'error', '加载失败') }
+  } catch (e) { showToast('error', '加载失败') }
   finally { loading.value = false }
 }
 

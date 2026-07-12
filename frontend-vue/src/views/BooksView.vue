@@ -5,8 +5,7 @@ import BookCard from '../components/BookCard.vue'
 import BookFormDialog from '../components/BookFormDialog.vue'
 import SkeletonLoader from '../components/SkeletonLoader.vue'
 import EmptyState from '../components/EmptyState.vue'
-
-const emit = defineEmits(['toast'])
+import { showToast } from '../composables/useToast.js'
 const confirmFn = inject('confirmFn')
 
 const books = ref([])
@@ -40,8 +39,8 @@ async function load() {
       const pr = res.data.data || {}
       books.value = pr.records || []
       total.value = pr.total || 0
-    } else emit('toast', 'error', res.data.message)
-  } catch (e) { emit('toast', 'error', '网络错误') }
+    } else showToast('error', res.data.message)
+  } catch (e) { showToast('error', '网络错误') }
   finally { loading.value = false }
 }
 
@@ -72,11 +71,11 @@ async function handleSubmit(payload, done) {
   try {
     const res = payload.id != null ? await BookAPI.update(payload) : await BookAPI.add(payload)
     if (res.data.code === 200) {
-      emit('toast', 'success', payload.id != null ? '修订完成' : '入藏完成')
+      showToast('success', payload.id != null ? '修订完成' : '入藏完成')
       dialogVisible.value = false
       await load()
-    } else emit('toast', 'error', res.data.message)
-  } catch (e) { emit('toast', 'error', '网络错误') }
+    } else showToast('error', res.data.message)
+  } catch (e) { showToast('error', '网络错误') }
   finally { done && done() }
 }
 
@@ -84,8 +83,8 @@ async function handleDelete(book) {
   const ok = await confirmFn('移出馆藏', `确定将《${book.name}》移出馆藏?`)
   if (!ok) return
   const res = await BookAPI.remove(book.id)
-  if (res.data.code === 200) { emit('toast', 'warning', '已移出'); await load() }
-  else emit('toast', 'error', res.data.message)
+  if (res.data.code === 200) { showToast('warning', '已移出'); await load() }
+  else showToast('error', res.data.message)
 }
 
 function toggleFilters() { showFilters.value = !showFilters.value }
