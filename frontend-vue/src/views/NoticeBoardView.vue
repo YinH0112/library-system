@@ -127,18 +127,24 @@ defineExpose({ reload: load })
   <transition name="dialog-fade">
     <div v-if="detailOpen" class="dialog-mask" @click.self="detailOpen = false">
       <div class="dialog-box" @click.stop>
-        <!-- 类型色带 -->
-        <div :class="['dialog-type-bar', `bar-${(detailNotice?.type || '').toLowerCase()}`]">
-          <span class="bar-label">{{ typeText(detailNotice?.type) }}</span>
-          <button class="dialog-close" @click="detailOpen = false">
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
-          </button>
+        <!-- 类型色带头部 -->
+        <div :class="['dialog-header', `bar-${(detailNotice?.type || '').toLowerCase()}`]">
+          <div class="header-deco-line"></div>
+          <div class="header-content">
+            <span class="bar-label">{{ typeText(detailNotice?.type) }}</span>
+            <button class="dialog-close" @click="detailOpen = false">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
+            </button>
+          </div>
+          <div class="header-deco-line"></div>
         </div>
 
         <div class="dialog-body">
           <!-- 标题区 -->
           <div class="dialog-title-area">
+            <div class="title-ornament-top"></div>
             <h2 class="dialog-title">{{ detailNotice?.title }}</h2>
+            <div class="title-ornament-bot"></div>
           </div>
 
           <!-- 元信息 -->
@@ -169,12 +175,17 @@ defineExpose({ reload: load })
           </div>
 
           <!-- 正文 -->
-          <div class="dialog-content">{{ detailNotice?.content }}</div>
-
-          <!-- 底部 -->
-          <div class="dialog-footer">
-            <button class="brutalist-btn" @click="detailOpen = false">关闭</button>
+          <div class="dialog-content">
+            <span class="content-quote-mark">"</span>
+            <div class="content-text">{{ detailNotice?.content }}</div>
           </div>
+        </div>
+
+        <!-- 底部 -->
+        <div class="dialog-footer">
+          <button class="dialog-close-btn" @click="detailOpen = false">
+            <span>关闭</span>
+          </button>
         </div>
       </div>
     </div>
@@ -434,8 +445,8 @@ defineExpose({ reload: load })
 .dialog-mask {
   position: fixed;
   inset: 0;
-  background: rgba(20, 20, 19, 0.5);
-  backdrop-filter: blur(10px);
+  background: rgba(15, 15, 14, 0.6);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -446,9 +457,9 @@ defineExpose({ reload: load })
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-2xl);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.03);
   width: 100%;
-  max-width: 600px;
+  max-width: 580px;
   max-height: 85vh;
   overflow: hidden;
   display: flex;
@@ -456,49 +467,72 @@ defineExpose({ reload: load })
 }
 
 /* 类型色带头部 */
-.dialog-type-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 14px 20px;
+.dialog-header {
   position: relative;
   overflow: hidden;
 }
-.dialog-type-bar::after {
+.bar-notice {
+  background: linear-gradient(135deg, #d97757 0%, #c96442 100%);
+}
+.bar-announcement {
+  background: linear-gradient(135deg, #8ca06f 0%, #6d8550 100%);
+}
+.bar-maintenance {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+.header-deco-line {
+  height: 3px;
+  background: rgba(255,255,255,0.15);
+}
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  position: relative;
+}
+.header-content::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 100%);
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 8px,
+    rgba(255,255,255,0.03) 8px,
+    rgba(255,255,255,0.03) 16px
+  );
   pointer-events: none;
-}
-.bar-notice {
-  background: linear-gradient(135deg, #1a1917 0%, #2c2620 100%);
-  color: var(--primary);
-}
-.bar-announcement {
-  background: linear-gradient(135deg, #1a1d17 0%, #1f261c 100%);
-  color: var(--success);
-}
-.bar-maintenance {
-  background: linear-gradient(135deg, #1d1717 0%, #261c1c 100%);
-  color: var(--destructive);
 }
 .bar-label {
   font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
+  color: #fff;
   position: relative;
   z-index: 1;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bar-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(255,255,255,0.4);
 }
 .dialog-close {
-  background: rgba(255,255,255,0.1);
-  color: var(--bg);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: var(--radius-sm);
-  width: 30px;
-  height: 30px;
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
   cursor: pointer;
   line-height: 1;
   transition: all 0.2s;
@@ -508,101 +542,188 @@ defineExpose({ reload: load })
   position: relative;
   z-index: 1;
 }
-.dialog-close:hover { background: rgba(239,68,68,0.8); border-color: transparent; }
+.dialog-close:hover {
+  background: rgba(0,0,0,0.25);
+  border-color: rgba(255,255,255,0.5);
+  transform: rotate(90deg);
+}
 
 /* 弹窗主体 */
 .dialog-body {
-  padding: 28px 28px 20px;
+  padding: 36px 36px 28px;
   overflow-y: auto;
   flex: 1;
 }
+
+/* 标题区 */
 .dialog-title-area {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+.title-ornament-top {
+  width: 40px;
+  height: 2px;
+  background: var(--border);
+  margin: 0 auto 20px;
+  position: relative;
+}
+.title-ornament-top::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--card);
 }
 .dialog-title {
   font-family: var(--font-editorial);
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 800;
-  line-height: 1.2;
+  line-height: 1.4;
   color: var(--foreground);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  margin-bottom: 16px;
+}
+.title-ornament-bot {
+  width: 60px;
+  height: 1px;
+  background: var(--border);
+  margin: 0 auto;
+  position: relative;
+}
+.title-ornament-bot::after {
+  content: '◆';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--card);
+  padding: 0 8px;
+  font-size: 8px;
+  color: var(--primary);
+  opacity: 0.5;
 }
 
 /* 元信息 */
 .dialog-meta {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 14px 16px;
-  background: var(--bg-subtle);
-  border: 1px solid var(--border-faint);
-  border-radius: var(--radius);
+  gap: 0;
+  margin-bottom: 28px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border-faint);
+  border-bottom: 1px solid var(--border-faint);
 }
 .meta-item {
   display: flex;
   align-items: center;
   gap: 10px;
   flex: 1;
+  justify-content: center;
 }
 .meta-icon {
-  width: 32px;
-  height: 32px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  width: 34px;
+  height: 34px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-faint);
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--muted);
+  color: var(--primary);
   flex-shrink: 0;
 }
 .meta-text {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
 }
 .meta-label {
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 0.14em;
+  font-size: 8px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
   font-weight: 600;
 }
 .meta-val {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--foreground);
 }
 .meta-divider {
   width: 1px;
-  height: 28px;
-  background: var(--border);
+  height: 32px;
+  background: var(--border-faint);
   flex-shrink: 0;
 }
 
 /* 正文 */
 .dialog-content {
+  position: relative;
+  padding: 28px 24px 24px;
+  background: var(--bg-subtle);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-faint);
+}
+.content-quote-mark {
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  font-family: var(--font-editorial);
+  font-size: 56px;
+  font-weight: 900;
+  color: var(--primary);
+  opacity: 0.15;
+  line-height: 1;
+  pointer-events: none;
+}
+.content-text {
   font-family: var(--font-sans);
   font-size: 15px;
-  line-height: 1.9;
-  color: var(--foreground-secondary);
+  line-height: 2.1;
+  color: var(--foreground);
   white-space: pre-wrap;
-  padding: 20px;
-  background: var(--bg);
-  border: 1px solid var(--border-faint);
-  border-radius: var(--radius);
+  text-indent: 2em;
+  letter-spacing: 0.01em;
 }
 
 /* 弹窗底部 */
 .dialog-footer {
   display: flex;
-  justify-content: flex-end;
-  padding: 16px 28px;
+  justify-content: center;
+  padding: 20px 36px;
   border-top: 1px solid var(--border-faint);
+  background: var(--card);
+}
+.dialog-close-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   background: var(--bg-subtle);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  padding: 11px 40px;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.dialog-close-btn:hover {
+  background: var(--foreground);
+  color: var(--bg);
+  border-color: var(--foreground);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.dialog-close-btn:active {
+  transform: translateY(0);
 }
 
 /* 弹窗过渡 */
