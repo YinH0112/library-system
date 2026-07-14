@@ -54,7 +54,11 @@ export const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
+  // 页面刷新时等待 auth 初始化完成，避免误跳登录页
+  if (!authStore.state.initialized) {
+    await authStore.initialize()
+  }
   if (to.meta.guest) return true
   if (!authStore.isLoggedIn()) return { name: 'login' }
   if (to.meta.role && authStore.state.user.role !== to.meta.role) {
